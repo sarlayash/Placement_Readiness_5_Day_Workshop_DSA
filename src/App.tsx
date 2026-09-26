@@ -351,6 +351,7 @@ export function App() {
       {/* Daily Badges Gallery Modal */}
       {showBadgeGallery && (
         <BadgeGallery
+          user={googleUser}
           progress={progress}
           onClose={() => setShowBadgeGallery(false)}
         />
