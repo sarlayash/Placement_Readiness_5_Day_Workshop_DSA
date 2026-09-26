@@ -24,7 +24,7 @@ interface DayViewProps {
   onOpenPostAssessment: () => void;
   onOpenFinalExam: () => void;
   onOpenCertificate: () => void;
-  onOpenScratchpad: (codeSnippet?: string) => void;
+  onOpenIDE: (question: Question) => void;
 }
 
 export const DayView: React.FC<DayViewProps> = ({
@@ -38,7 +38,7 @@ export const DayView: React.FC<DayViewProps> = ({
   onOpenPostAssessment,
   onOpenFinalExam,
   onOpenCertificate,
-  onOpenScratchpad,
+  onOpenIDE,
 }) => {
   const [activePart, setActivePart] = useState<1 | 2>(1);
   const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(null);
@@ -258,7 +258,7 @@ export const DayView: React.FC<DayViewProps> = ({
                 isCompleted={progress.completedQuestionIds.includes(q.id)}
                 onToggleExpand={() => toggleExpand(q.id)}
                 onToggleSolved={() => onToggleQuestion(q.id)}
-                onOpenScratchpad={onOpenScratchpad}
+                onOpenIDE={() => onOpenIDE(q)}
               />
             ))}
         </div>
@@ -287,7 +287,7 @@ export const DayView: React.FC<DayViewProps> = ({
                 isCompleted={progress.completedQuestionIds.includes(q.id)}
                 onToggleExpand={() => toggleExpand(q.id)}
                 onToggleSolved={() => onToggleQuestion(q.id)}
-                onOpenScratchpad={onOpenScratchpad}
+                onOpenIDE={() => onOpenIDE(q)}
               />
             ))}
         </div>
@@ -350,7 +350,7 @@ interface QuestionCardProps {
   isCompleted: boolean;
   onToggleExpand: () => void;
   onToggleSolved: () => void;
-  onOpenScratchpad: (snippet?: string) => void;
+  onOpenIDE: () => void;
 }
 
 const QuestionCard: React.FC<QuestionCardProps> = ({
@@ -359,7 +359,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
   isCompleted,
   onToggleExpand,
   onToggleSolved,
-  onOpenScratchpad,
+  onOpenIDE,
 }) => {
   return (
     <div
@@ -420,6 +420,19 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
           <span className="hidden sm:inline-block text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-600">
             {question.timeComplexity}
           </span>
+
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenIDE();
+            }}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg border border-indigo-600 bg-[#070d1e] text-indigo-300 hover:bg-[#0c1633] text-[11px] font-bold shadow-xs cursor-pointer transition-colors"
+            title="Open in Browser IDE (C, C++, Java, Python, HTML, JS + Hidden Tests)"
+          >
+            <Code2 className="w-3.5 h-3.5 text-indigo-400" />
+            <span className="hidden sm:inline">IDE</span>
+          </button>
 
           <button
             type="button"
@@ -537,15 +550,11 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
 
               <button
                 type="button"
-                onClick={() =>
-                  onOpenScratchpad(
-                    `// Scratchpad for: ${question.name}\n// Time: ${question.timeComplexity} | Space: ${question.spaceComplexity}\n\nfunction solve() {\n  // Implementation here\n}\n`
-                  )
-                }
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:text-indigo-600 hover:border-indigo-200 text-xs font-semibold cursor-pointer"
+                onClick={onOpenIDE}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-indigo-600 bg-[#070d1e] text-indigo-200 hover:bg-[#0c1633] text-xs font-bold cursor-pointer transition-colors shadow-xs"
               >
-                <Code2 className="w-3.5 h-3.5" />
-                <span>Open in Scratchpad</span>
+                <Code2 className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Open in IDE (6 Langs + Tests)</span>
               </button>
             </div>
 

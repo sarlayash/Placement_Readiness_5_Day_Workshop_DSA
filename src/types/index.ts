@@ -1,3 +1,13 @@
+export type SupportedLanguage = 'c' | 'cpp' | 'java' | 'python' | 'html' | 'javascript';
+
+export interface TestCase {
+  id: string;
+  input: string;
+  expectedOutput: string;
+  isHidden: boolean;
+  explanation?: string;
+}
+
 export interface Question {
   id: string;
   topicCode: string; // T1 to T10
@@ -13,9 +23,12 @@ export interface Question {
   sampleOutput: string;
   constraints: string[];
   kapilIntuition: string; // Kapil's strategic algorithmic advice
+  interviewTips?: string[];
   timeComplexity: string;
   spaceComplexity: string;
   hackerRankUrl: string;
+  testCases: TestCase[];
+  starterCode: Record<SupportedLanguage, string>;
   completed?: boolean;
 }
 
@@ -24,7 +37,7 @@ export interface Topic {
   name: string;
   day: number;
   part: 1 | 2;
-  module: 'Technical';
+  module: string;
   totalQuestions: number;
   durationHours: number;
   inclassCount: number;
@@ -86,4 +99,5 @@ export interface UserProgress {
   finalExamDate: string | null;
   certificateId: string | null;
   customNotes: Record<string, string>;
+  questionCodeSnippets?: Record<string, Record<string, string>>;
 }

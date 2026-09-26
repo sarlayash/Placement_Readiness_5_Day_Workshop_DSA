@@ -1,7 +1,7 @@
 import React from 'react';
 import { GoogleUser, UserProgress } from '../types';
 import { ISTStatus, formatSecondsToDHMS } from '../utils/istTime';
-import { Clock, LogOut, Award, Menu, PanelRightClose, PanelRightOpen, Lock, Unlock, Sparkles } from 'lucide-react';
+import { Clock, LogOut, Award, Menu, Lock, Unlock, Sparkles, Code2, Lightbulb } from 'lucide-react';
 
 interface HeaderProps {
   user: GoogleUser | null;
@@ -11,10 +11,10 @@ interface HeaderProps {
   onToggleDemoBypass: () => void;
   onSignOut: () => void;
   onToggleLeftSidebar: () => void;
-  onToggleRightSidebar: () => void;
-  rightSidebarOpen: boolean;
   onOpenBadges: () => void;
   onOpenCertificate: () => void;
+  onOpenIDE?: () => void;
+  onOpenInterviewTips?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -25,10 +25,10 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleDemoBypass,
   onSignOut,
   onToggleLeftSidebar,
-  onToggleRightSidebar,
-  rightSidebarOpen,
   onOpenBadges,
   onOpenCertificate,
+  onOpenIDE,
+  onOpenInterviewTips,
 }) => {
   const badgeCount = Object.values(progress.badgesUnlocked).filter(Boolean).length;
 
@@ -174,19 +174,31 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           )}
 
-          {/* Right Panel Toggle Button */}
-          <button
-            type="button"
-            onClick={onToggleRightSidebar}
-            className={`p-2 rounded-xl border transition-colors ${
-              rightSidebarOpen
-                ? 'border-indigo-300 bg-indigo-50 text-indigo-700'
-                : 'border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-            }`}
-            title="Toggle Kapil's Scratchpad & Tools Drawer"
-          >
-            {rightSidebarOpen ? <PanelRightClose className="w-4 h-4" /> : <PanelRightOpen className="w-4 h-4" />}
-          </button>
+          {/* Interview Playbook Quick Button */}
+          {onOpenInterviewTips && (
+            <button
+              type="button"
+              onClick={onOpenInterviewTips}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold transition-all shadow-xs cursor-pointer"
+              title="Open Kapil's Placement Interview Playbook"
+            >
+              <Lightbulb className="w-3.5 h-3.5 text-amber-600" />
+              <span className="hidden sm:inline">Interview Tips</span>
+            </button>
+          )}
+
+          {/* Browser IDE Quick Button */}
+          {onOpenIDE && (
+            <button
+              type="button"
+              onClick={onOpenIDE}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-indigo-600 bg-[#070d1e] hover:bg-[#0c1633] text-indigo-300 text-xs font-bold transition-all shadow-sm cursor-pointer"
+              title="Open Browser IDE (C, C++, Java, Python, HTML, JS + Hidden Tests)"
+            >
+              <Code2 className="w-3.5 h-3.5 text-indigo-400" />
+              <span className="hidden md:inline">IDE</span>
+            </button>
+          )}
         </div>
       </div>
 

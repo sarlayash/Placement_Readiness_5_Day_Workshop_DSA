@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { GoogleUser, UserProgress } from './types';
+import { GoogleUser, UserProgress, Question } from './types';
 import {
   loadGoogleUser,
   saveGoogleUser,
@@ -13,8 +13,9 @@ import { TOPICS, DAILY_ASSESSMENTS } from './data/curriculum';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { LeftSidebar } from './components/LeftSidebar';
-import { RightSidebar } from './components/RightSidebar';
 import { DayView } from './components/DayView';
+import { IDEWorkspace } from './components/IDEWorkspace';
+import { InterviewTipsModal } from './components/InterviewTipsModal';
 import { GoogleAuthModal } from './components/GoogleAuthModal';
 import { AssessmentModal } from './components/AssessmentModal';
 import { ProctoredExamModal } from './components/ProctoredExamModal';
@@ -30,11 +31,14 @@ export function App() {
   // Learning Progress State
   const [progress, setProgress] = useState<UserProgress>(() => loadUserProgress());
 
-  // Layout Resizable Widths (Drag-expand options on left and right)
+  // Layout Resizable Widths & Collapsible States (Navy Blue Left Bar)
   const [leftWidth, setLeftWidth] = useState<number>(280);
-  const [rightWidth, setRightWidth] = useState<number>(350);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
   const [leftSidebarMobileOpen, setLeftSidebarMobileOpen] = useState<boolean>(false);
-  const [rightSidebarOpen, setRightSidebarOpen] = useState<boolean>(false);
+
+  // In-Browser IDE and Interview Playbook State
+  const [activeIDEQuestion, setActiveIDEQuestion] = useState<Question | null>(null);
+  const [showInterviewTips, setShowInterviewTips] = useState<boolean>(false);
 
   // Active Selected Day (1 to 5)
   const [currentDay, setCurrentDay] = useState<number>(1);
@@ -185,15 +189,15 @@ export function App() {
         onToggleDemoBypass={() => setDemoBypass((prev) => !prev)}
         onSignOut={handleSignOut}
         onToggleLeftSidebar={() => setLeftSidebarMobileOpen((prev) => !prev)}
-        onToggleRightSidebar={() => setRightSidebarOpen((prev) => !prev)}
-        rightSidebarOpen={rightSidebarOpen}
         onOpenBadges={() => setShowBadgeGallery(true)}
         onOpenCertificate={() => setShowCertificate(true)}
+        onOpenIDE={() => setActiveIDEQuestion(dayTopics[0]?.questions[0] || TOPICS[0]?.questions[0] || null)}
+        onOpenInterviewTips={() => setShowInterviewTips(true)}
       />
 
-      {/* 3. MAIN WORKSPACE CONTAINER WITH LEFT AND RIGHT DRAGGABLE PANELS */}
+      {/* 3. MAIN WORKSPACE CONTAINER WITH COLLAPSIBLE NAVY BLUE LEFT SIDEBAR */}
       <div className="flex-1 flex relative bg-white">
-        {/* Left Navigation Bar (with draggable resize handle) */}
+        {/* Left Navigation Bar (Navy Blue with Collapse/Expand and Draggable handle) */}
         <LeftSidebar
           currentDay={currentDay}
           onSelectDay={(day) => setCurrentDay(day)}
@@ -204,18 +208,21 @@ export function App() {
           onCloseMobile={() => setLeftSidebarMobileOpen(false)}
           width={leftWidth}
           onWidthChange={setLeftWidth}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
           onOpenBadges={() => setShowBadgeGallery(true)}
           onOpenCertificate={() => setShowCertificate(true)}
           onOpenFinalExam={() => setShowProctoredExam(true)}
+          onOpenInterviewTips={() => setShowInterviewTips(true)}
+          onOpenIDE={() => setActiveIDEQuestion(dayTopics[0]?.questions[0] || TOPICS[0]?.questions[0] || null)}
         />
 
         {/* Center Main Content Area */}
         <main
           style={{
-            marginLeft: `${leftWidth}px`,
-            marginRight: rightSidebarOpen ? `${rightWidth}px` : '0px',
+            marginLeft: isSidebarCollapsed ? '76px' : `${leftWidth}px`,
           }}
-          className="flex-1 p-4 md:p-8 transition-[margin] duration-150 ease-out max-lg:!ml-0 max-lg:!mr-0 bg-white"
+          className="flex-1 p-4 md:p-8 transition-[margin] duration-200 ease-out max-lg:!ml-0 bg-white"
         >
           {/* Locked Day Warning Banner if day is locked */}
           {!dayLockState.unlocked ? (
@@ -263,25 +270,10 @@ export function App() {
               }
               onOpenFinalExam={() => setShowProctoredExam(true)}
               onOpenCertificate={() => setShowCertificate(true)}
-              onOpenScratchpad={() => setRightSidebarOpen(true)}
+              onOpenIDE={(q) => setActiveIDEQuestion(q)}
             />
           )}
         </main>
-
-        {/* Right Drawer (with draggable resize handle) */}
-        <RightSidebar
-          isOpen={rightSidebarOpen}
-          onClose={() => setRightSidebarOpen(false)}
-          width={rightWidth}
-          onWidthChange={setRightWidth}
-          istStatus={istStatus}
-          demoBypass={demoBypass}
-          onToggleDemoBypass={() => setDemoBypass((prev) => !prev)}
-          onSetSimulatedHour={handleSetSimulatedHour}
-          onResetSimulatedTime={handleResetSimulatedTime}
-          progress={progress}
-          onToggleQuestionCompletion={handleToggleQuestion}
-        />
       </div>
 
       {/* 4. PROPER FOOTER */}
@@ -293,6 +285,20 @@ export function App() {
       />
 
       {/* 5. MODALS & POPUPS */}
+      {/* In-Browser IDE Workspace (Dark Theme, 6 Languages, Hidden Test Cases) */}
+      {activeIDEQuestion && (
+        <IDEWorkspace
+          question={activeIDEQuestion}
+          onClose={() => setActiveIDEQuestion(null)}
+          onMarkSolved={() => handleToggleQuestion(activeIDEQuestion.id)}
+        />
+      )}
+
+      {/* Kapil's Placement Interview Playbook Modal (Dark Theme) */}
+      {showInterviewTips && (
+        <InterviewTipsModal onClose={() => setShowInterviewTips(false)} />
+      )}
+
       {/* Daily Pre/Post Assessment Modal */}
       {activeAssessment && DAILY_ASSESSMENTS[activeAssessment.day] && (
         <AssessmentModal

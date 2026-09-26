@@ -1,4 +1,5 @@
 import { Topic, DayAssessment, Badge, AssessmentQuestion } from '../types';
+import { generateStarterCode, generateTestCases } from '../utils/codeTemplates';
 
 export const HACKERRANK_COURSE_URL = 'https://www.hackerrank.com/ti27183-jiet';
 
@@ -45,7 +46,7 @@ export const BADGES: Badge[] = [
   },
 ];
 
-export const TOPICS: Topic[] = [
+const RAW_TOPICS = [
   // DAY 1
   {
     code: 'T1',
@@ -1026,6 +1027,21 @@ export const TOPICS: Topic[] = [
     ],
   },
 ];
+
+export const TOPICS: Topic[] = RAW_TOPICS.map((topic) => ({
+  ...topic,
+  part: (topic.part === 1 ? 1 : 2) as 1 | 2,
+  questions: topic.questions.map((q: any) => ({
+    ...q,
+    testCases: generateTestCases(q.sampleInput, q.sampleOutput, q.name),
+    starterCode: generateStarterCode(q.name, q.sampleInput, q.sampleOutput),
+    interviewTips: [
+      `Kapil's Pro-Tip: Clarify corner cases (empty, single element, negative inputs).`,
+      `Target: ${q.timeComplexity} time and ${q.spaceComplexity} auxiliary space.`,
+      `Interviewer Probe: "Trace this algorithm with a small handwritten test case first."`,
+    ],
+  })),
+}));
 
 // Daily Pre and Post Assessments (5 questions each)
 export const DAILY_ASSESSMENTS: Record<number, DayAssessment> = {
