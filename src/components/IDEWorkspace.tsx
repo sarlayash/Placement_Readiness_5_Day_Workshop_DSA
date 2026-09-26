@@ -5,9 +5,7 @@ import {
   CheckCircle2,
   XCircle,
   RotateCcw,
-  Sparkles,
   Lock,
-  Unlock,
   Terminal,
   FileCode,
   Eye,
@@ -113,7 +111,7 @@ export const IDEWorkspace: React.FC<IDEWorkspaceProps> = ({
 
     setTimeout(() => {
       let passed = 0;
-      const results = testCasesToRun.map((tc, index) => {
+      const results = testCasesToRun.map((tc) => {
         // High fidelity testcase simulation based on language and code
         const isPass = !code.includes('// TODO') && code.length > 50;
         if (isPass) passed++;

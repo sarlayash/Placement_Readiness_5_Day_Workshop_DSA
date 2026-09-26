@@ -8,7 +8,9 @@ import {
   generateCertificateId,
   INITIAL_PROGRESS,
 } from './utils/storage';
-import { calculateISTStatus, isDayUnlocked } from './utils/istTime';
+import { calculateISTStatus } from './utils/istTime';
+import { isDayUnlockedStrict, checkFinalExamEligibility } from './utils/prerequisites';
+import { isOnline } from './utils/pwa';
 import { TOPICS, DAILY_ASSESSMENTS } from './data/curriculum';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
@@ -23,6 +25,9 @@ import { CertificateModal } from './components/CertificateModal';
 import { BadgeGallery } from './components/BadgeGallery';
 import { SpinningWheelModal } from './components/SpinningWheelModal';
 import { AptitudeSection } from './components/AptitudeSection';
+import { PrerequisitesModal } from './components/PrerequisitesModal';
+import { PWAInstallModal } from './components/PWAInstallModal';
+import { MobileBottomNav } from './components/MobileBottomNav';
 import { Lock, Unlock, Clock, AlertCircle, Zap, Brain, LogIn, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -54,6 +59,12 @@ export function App() {
   const [demoBypass, setDemoBypass] = useState<boolean>(false);
   const [istStatus, setIstStatus] = useState(() => calculateISTStatus(null, false));
 
+  // Network & PWA status
+  const [isOnlineState, setIsOnlineState] = useState<boolean>(() => isOnline());
+  const [showPWAInstallModal, setShowPWAInstallModal] = useState<boolean>(false);
+  const [showPrerequisitesModal, setShowPrerequisitesModal] = useState<boolean>(false);
+  const [mobileTab, setMobileTab] = useState<'syllabus' | 'aptitude'>('syllabus');
+
   // Modals
   const [activeAssessment, setActiveAssessment] = useState<{
     day: number;
@@ -62,6 +73,18 @@ export function App() {
   const [showProctoredExam, setShowProctoredExam] = useState<boolean>(false);
   const [showCertificate, setShowCertificate] = useState<boolean>(false);
   const [showBadgeGallery, setShowBadgeGallery] = useState<boolean>(false);
+
+  // Online / offline listeners
+  useEffect(() => {
+    const handleOnline = () => setIsOnlineState(true);
+    const handleOffline = () => setIsOnlineState(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // Update IST status clock every second
   useEffect(() => {
@@ -185,15 +208,27 @@ export function App() {
   // Filter topics for the active day (Part 1 and Part 2)
   const dayTopics = TOPICS.filter((t) => t.day === currentDay);
 
-  // Check if current day is unlocked
-  const dayLockState = isDayUnlocked(currentDay, progress.badgesUnlocked, istStatus, demoBypass);
+  // Check if current day is unlocked (Strict: Pre-test, Questions, 6 Solved Programs, Post-test & Badge)
+  const dayLockState = isDayUnlockedStrict(currentDay, progress, istStatus, demoBypass);
+
+  // Strict Final Exam Gatekeeper (Day 5 Proctored Exam requires 100% completion of Days 1 to 5)
+  const handleOpenFinalExam = () => {
+    requireAuth(() => {
+      const eligibility = checkFinalExamEligibility(progress, demoBypass);
+      if (!eligibility.isEligible) {
+        setShowPrerequisitesModal(true);
+      } else {
+        setShowProctoredExam(true);
+      }
+    });
+  };
 
   const totalQuestions = TOPICS.reduce((acc, t) => acc + t.questions.length, 0);
   const completedQuestions = progress.completedQuestionIds.length;
   const badgesEarned = Object.values(progress.badgesUnlocked).filter(Boolean).length;
 
   return (
-    <div className="min-h-screen flex flex-col bg-white text-slate-800 selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen flex flex-col bg-white text-slate-800 selection:bg-indigo-500 selection:text-white pb-14 md:pb-0">
       {/* 1. BEGIN WITH SPINNING WHEEL FOR 10 MCQS BONUS + NEGATIVE MARKS */}
       {showSpinningWheel && (
         <SpinningWheelModal
@@ -235,6 +270,8 @@ export function App() {
           el?.scrollIntoView({ behavior: 'smooth' });
         }}
         onPromptLogin={() => setShowAuthModal(true)}
+        onOpenPWAInstall={() => setShowPWAInstallModal(true)}
+        isOnline={isOnlineState}
       />
 
       {/* 4. MAIN WORKSPACE CONTAINER WITH COLLAPSIBLE NAVY BLUE LEFT SIDEBAR */}
@@ -262,9 +299,7 @@ export function App() {
           onOpenCertificate={() => {
             requireAuth(() => setShowCertificate(true));
           }}
-          onOpenFinalExam={() => {
-            requireAuth(() => setShowProctoredExam(true));
-          }}
+          onOpenFinalExam={handleOpenFinalExam}
           onOpenInterviewTips={() => setShowInterviewTips(true)}
           onOpenIDE={() => setActiveIDEQuestion(dayTopics[0]?.questions[0] || TOPICS[0]?.questions[0] || null)}
           onOpenSpinningWheel={() => setShowSpinningWheel(true)}
@@ -272,6 +307,7 @@ export function App() {
             const el = document.getElementById('aptitude-section');
             el?.scrollIntoView({ behavior: 'smooth' });
           }}
+          onOpenPWAInstall={() => setShowPWAInstallModal(true)}
         />
 
         {/* Center Main Content Area */}
@@ -381,9 +417,7 @@ export function App() {
                     setActiveAssessment({ day: currentDay, type: 'post' })
                   )
                 }
-                onOpenFinalExam={() => {
-                  requireAuth(() => setShowProctoredExam(true));
-                }}
+                onOpenFinalExam={handleOpenFinalExam}
                 onOpenCertificate={() => {
                   requireAuth(() => setShowCertificate(true));
                 }}
@@ -403,7 +437,26 @@ export function App() {
         onResetProgress={handleResetProgress}
       />
 
-      {/* 6. MODALS & POPUPS */}
+      {/* 6. MOBILE BOTTOM NAVIGATION BAR (Thumb ergonomics & offline status) */}
+      <MobileBottomNav
+        currentTab={mobileTab}
+        onSelectTab={(tab) => {
+          setMobileTab(tab);
+          if (tab === 'aptitude') {
+            const el = document.getElementById('aptitude-section');
+            el?.scrollIntoView({ behavior: 'smooth' });
+          } else {
+            const el = document.getElementById('curriculum-workspace-section');
+            el?.scrollIntoView({ behavior: 'smooth' });
+          }
+        }}
+        onOpenSpinningWheel={() => setShowSpinningWheel(true)}
+        onOpenIDE={() => setActiveIDEQuestion(dayTopics[0]?.questions[0] || TOPICS[0]?.questions[0] || null)}
+        onOpenBadges={() => setShowBadgeGallery(true)}
+        isOnline={isOnlineState}
+      />
+
+      {/* 7. MODALS & POPUPS */}
       {/* In-Browser IDE Workspace (Dark Theme, 6 Languages, Hidden Test Cases) */}
       {activeIDEQuestion && (
         <IDEWorkspace
@@ -458,6 +511,29 @@ export function App() {
           progress={progress}
           onClose={() => setShowBadgeGallery(false)}
         />
+      )}
+
+      {/* Strict Prerequisites Checklist Modal for Final Exam */}
+      {showPrerequisitesModal && (
+        <PrerequisitesModal
+          eligibility={checkFinalExamEligibility(progress, demoBypass)}
+          onNavigateToDay={(day) => {
+            setCurrentDay(day);
+            setShowPrerequisitesModal(false);
+            const el = document.getElementById('curriculum-workspace-section');
+            el?.scrollIntoView({ behavior: 'smooth' });
+          }}
+          onEnableBypass={() => {
+            setDemoBypass(true);
+            setShowPrerequisitesModal(false);
+          }}
+          onClose={() => setShowPrerequisitesModal(false)}
+        />
+      )}
+
+      {/* Progressive Web App (PWA) Offline Install Modal */}
+      {showPWAInstallModal && (
+        <PWAInstallModal onClose={() => setShowPWAInstallModal(false)} />
       )}
     </div>
   );

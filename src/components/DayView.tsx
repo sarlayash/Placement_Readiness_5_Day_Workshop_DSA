@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Topic, Question, UserProgress } from '../types';
 import { ISTStatus } from '../utils/istTime';
+import { checkDayCompletion, checkFinalExamEligibility } from '../utils/prerequisites';
 import {
   Award,
   ChevronDown,
@@ -12,6 +13,9 @@ import {
   Check,
   BookOpen,
   FileCheck2,
+  Lock,
+  CheckCircle2,
+  AlertCircle,
 } from 'lucide-react';
 import { HACKERRANK_COURSE_URL } from '../data/curriculum';
 import { SOLVED_PROGRAMS } from '../data/solvedPrograms';
@@ -36,8 +40,8 @@ export const DayView: React.FC<DayViewProps> = ({
   day,
   topics,
   progress,
-  istStatus: _istStatus,
-  demoBypass: _demoBypass,
+  istStatus,
+  demoBypass,
   onToggleQuestion,
   onOpenPreAssessment,
   onOpenPostAssessment,
@@ -51,6 +55,9 @@ export const DayView: React.FC<DayViewProps> = ({
   const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(null);
 
   const selectedTopic = topics.find((t) => t.part === activePart) || topics[0];
+
+  const dayStatus = checkDayCompletion(day, progress);
+  const examEligibility = checkFinalExamEligibility(progress, demoBypass);
 
   const prePassed = !!progress.dayPreAssessmentPassed[day];
   const preScore = progress.dayPreAssessmentScores[day] || 0;
@@ -406,14 +413,29 @@ export const DayView: React.FC<DayViewProps> = ({
                   <Sparkles className="w-4 h-4 text-amber-200" />
                   <span>View Verified Certificate</span>
                 </button>
+              ) : !examEligibility.isEligible ? (
+                <div className="flex flex-col items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={onOpenFinalExam}
+                    className="w-full px-5 py-3 rounded-2xl border-2 border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 font-extrabold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                    title="Click to view checklist of remaining tasks"
+                  >
+                    <Lock className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>Locked: {examEligibility.totalTasksRemaining} Task(s) Pending Across Days 1-5</span>
+                  </button>
+                  <span className="text-[10px] text-slate-500 font-semibold">
+                    Complete all Day 1-5 tasks to unlock exam
+                  </span>
+                </div>
               ) : (
                 <button
                   type="button"
                   onClick={onOpenFinalExam}
-                  className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white font-bold text-sm hover:opacity-95 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                  className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white font-bold text-sm hover:opacity-95 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md animate-pulse"
                 >
                   <ShieldCheck className="w-4 h-4 text-white" />
-                  <span>Launch Proctored Exam</span>
+                  <span>Launch Proctored Exam (All 5 Days Complete ✓)</span>
                 </button>
               )}
             </div>

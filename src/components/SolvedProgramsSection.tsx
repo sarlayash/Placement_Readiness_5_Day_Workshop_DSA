@@ -10,9 +10,7 @@ import {
   ChevronDown,
   ChevronUp,
   Award,
-  BookOpen,
   FileCheck2,
-  Lock,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 

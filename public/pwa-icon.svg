@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="50%" stop-color="#1e1b4b" />
+      <stop offset="100%" stop-color="#0a0a1a" />
+    </linearGradient>
+    <linearGradient id="rainbow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ef4444" />
+      <stop offset="20%" stop-color="#f59e0b" />
+      <stop offset="40%" stop-color="#10b981" />
+      <stop offset="60%" stop-color="#0ea5e9" />
+      <stop offset="80%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#a855f7" />
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="50%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#b45309" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background with rounded corners -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)" />
+  
+  <!-- Outer Rainbow Ring -->
+  <rect x="24" y="24" width="464" height="464" rx="96" fill="none" stroke="url(#rainbow)" stroke-width="12" />
+
+  <!-- Inner Gold Ring -->
+  <rect x="42" y="42" width="428" height="428" rx="80" fill="none" stroke="url(#gold)" stroke-width="4" stroke-dasharray="16, 12" />
+
+  <!-- Central Emblem Shield -->
+  <circle cx="256" cy="230" r="130" fill="url(#rainbow)" opacity="0.9" />
+  <circle cx="256" cy="230" r="118" fill="#0f172a" />
+
+  <!-- Kapil "K" Logo -->
+  <text x="256" y="295" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="190" fill="url(#rainbow)" text-anchor="middle">
+    K
+  </text>
+
+  <!-- Stars -->
+  <text x="256" y="145" font-size="28" fill="url(#gold)" text-anchor="middle">★ ★ ★</text>
+
+  <!-- Label -->
+  <text x="256" y="415" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="28" fill="#f8fafc" letter-spacing="4" text-anchor="middle">
+    PLACEMENT
+  </text>
+  <text x="256" y="445" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="700" font-size="18" fill="url(#gold)" letter-spacing="3" text-anchor="middle">
+    POWERED BY KAPIL
+  </text>
+</svg>

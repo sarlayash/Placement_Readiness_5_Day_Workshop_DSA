@@ -1,6 +1,7 @@
 import React, { useRef, useCallback } from 'react';
 import { UserProgress } from '../types';
-import { ISTStatus, isDayUnlocked } from '../utils/istTime';
+import { ISTStatus } from '../utils/istTime';
+import { isDayUnlockedStrict, checkDayCompletion } from '../utils/prerequisites';
 import {
   CheckCircle2,
   Award,
@@ -16,6 +17,7 @@ import {
   Lightbulb,
   Zap,
   Brain,
+  Smartphone,
 } from 'lucide-react';
 import { HACKERRANK_COURSE_URL } from '../data/curriculum';
 import { SOLVED_PROGRAMS } from '../data/solvedPrograms';
@@ -39,6 +41,7 @@ interface LeftSidebarProps {
   onOpenIDE: () => void;
   onOpenSpinningWheel?: () => void;
   onOpenAptitude?: () => void;
+  onOpenPWAInstall?: () => void;
 }
 
 const DAY_METADATA = [
@@ -68,6 +71,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   onOpenIDE,
   onOpenSpinningWheel,
   onOpenAptitude,
+  onOpenPWAInstall,
 }) => {
   const isDraggingRef = useRef(false);
 
@@ -162,8 +166,9 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
             <div className="space-y-1.5">
               {DAY_METADATA.map((item) => {
                 const isSelected = currentDay === item.day;
-                const lockState = isDayUnlocked(item.day, progress.badgesUnlocked, istStatus, demoBypass);
-                const isCompleted = !!progress.badgesUnlocked[item.day];
+                const lockState = isDayUnlockedStrict(item.day, progress, istStatus, demoBypass);
+                const dayStatus = checkDayCompletion(item.day, progress);
+                const isCompleted = dayStatus.isComplete;
                 const prePassed = !!progress.dayPreAssessmentPassed[item.day];
                 const postPassed = !!progress.dayPostAssessmentPassed[item.day];
 
@@ -437,6 +442,28 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
               </div>
               {!isCollapsed && <span className="text-[10px] text-slate-400">↗</span>}
             </a>
+
+            {/* Install Phone App (PWA) Button */}
+            {onOpenPWAInstall && (
+              <button
+                type="button"
+                onClick={onOpenPWAInstall}
+                title={isCollapsed ? 'Install Phone App (Offline)' : undefined}
+                className={`w-full flex items-center rounded-xl border border-emerald-500/30 bg-emerald-950/20 hover:bg-emerald-950/40 text-emerald-300 text-xs font-semibold transition-colors cursor-pointer ${
+                  isCollapsed ? 'p-2 justify-center' : 'p-2.5 justify-between'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Smartphone className="w-4 h-4 text-emerald-400 shrink-0" />
+                  {!isCollapsed && <span>Download Phone App</span>}
+                </div>
+                {!isCollapsed && (
+                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-900 text-emerald-200 font-mono font-bold">
+                    PWA
+                  </span>
+                )}
+              </button>
+            )}
           </div>
         </div>
 
