@@ -5,6 +5,7 @@ const STORAGE_KEY_PROGRESS = 'kapil_prp_user_progress';
 
 export const INITIAL_PROGRESS: UserProgress = {
   completedQuestionIds: [],
+  acknowledgedSolvedProgramIds: [],
   dayPreAssessmentPassed: {},
   dayPostAssessmentPassed: {},
   dayPreAssessmentScores: {},

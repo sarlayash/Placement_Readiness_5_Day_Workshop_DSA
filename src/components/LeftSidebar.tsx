@@ -16,6 +16,7 @@ import {
   Lightbulb,
 } from 'lucide-react';
 import { HACKERRANK_COURSE_URL } from '../data/curriculum';
+import { SOLVED_PROGRAMS } from '../data/solvedPrograms';
 
 interface LeftSidebarProps {
   currentDay: number;
@@ -231,15 +232,23 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
 
                     {/* Sub-status badges if expanded */}
                     {!isCollapsed && (
-                      <div className="mt-2.5 pt-2 border-t border-[#152a55] flex items-center justify-between text-[10px] text-slate-400 font-medium">
-                        <span className="flex items-center gap-1">
-                          <span className={`w-1.5 h-1.5 rounded-full ${prePassed ? 'bg-emerald-400' : 'bg-slate-600'}`} />
-                          Pre: {prePassed ? 'Passed' : 'Pending'}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <span className={`w-1.5 h-1.5 rounded-full ${postPassed ? 'bg-emerald-400' : 'bg-slate-600'}`} />
-                          Post: {postPassed ? 'Passed' : 'Pending'}
-                        </span>
+                      <div className="mt-2.5 pt-2 border-t border-[#152a55] flex flex-col gap-1 text-[10px] text-slate-400 font-medium">
+                        <div className="flex items-center justify-between">
+                          <span className="flex items-center gap-1">
+                            <span className={`w-1.5 h-1.5 rounded-full ${prePassed ? 'bg-emerald-400' : 'bg-slate-600'}`} />
+                            Pre: {prePassed ? 'Passed' : 'Pending'}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <span className={`w-1.5 h-1.5 rounded-full ${postPassed ? 'bg-emerald-400' : 'bg-slate-600'}`} />
+                            Post: {postPassed ? 'Passed' : 'Pending'}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-[9px] pt-0.5">
+                          <span className="text-emerald-400 font-mono font-bold">
+                            {SOLVED_PROGRAMS.filter((p) => p.day === item.day && (progress.acknowledgedSolvedProgramIds || []).includes(p.id)).length}/6 Solved
+                          </span>
+                          <span className="text-slate-500 font-mono">2E • 2M • 2H</span>
+                        </div>
                       </div>
                     )}
                   </button>

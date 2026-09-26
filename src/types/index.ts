@@ -87,8 +87,26 @@ export interface ProctorLog {
   severity: 'info' | 'warning' | 'critical';
 }
 
+export interface SolvedProgram {
+  id: string; // e.g., "D1-E1", "D1-E2", "D1-M1", "D1-M2", "D1-H1", "D1-H2"
+  day: number; // 1 to 5
+  title: string;
+  difficulty: 'Easy' | 'Medium' | 'Hard';
+  topicTag: string;
+  problemStatement: string;
+  sampleInput: string;
+  sampleOutput: string;
+  explanation: string;
+  kapilInsight: string;
+  timeComplexity: string;
+  spaceComplexity: string;
+  solutions: Record<SupportedLanguage, string>;
+  testCases: TestCase[];
+}
+
 export interface UserProgress {
   completedQuestionIds: string[];
+  acknowledgedSolvedProgramIds: string[];
   dayPreAssessmentPassed: Record<number, boolean>;
   dayPostAssessmentPassed: Record<number, boolean>;
   dayPreAssessmentScores: Record<number, number>;

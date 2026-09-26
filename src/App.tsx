@@ -105,6 +105,21 @@ export function App() {
     });
   };
 
+  // Toggle Solved Program Learner Acknowledgement
+  const handleToggleAcknowledgeProgram = (programId: string) => {
+    setProgress((prev) => {
+      const current = prev.acknowledgedSolvedProgramIds || [];
+      const exists = current.includes(programId);
+      const updated = exists
+        ? current.filter((id) => id !== programId)
+        : [...current, programId];
+      return {
+        ...prev,
+        acknowledgedSolvedProgramIds: updated,
+      };
+    });
+  };
+
   // Complete Pre or Post Assessment
   const handleAssessmentComplete = (scorePercentage: number, passed: boolean) => {
     if (!activeAssessment) return;
@@ -271,6 +286,7 @@ export function App() {
               onOpenFinalExam={() => setShowProctoredExam(true)}
               onOpenCertificate={() => setShowCertificate(true)}
               onOpenIDE={(q) => setActiveIDEQuestion(q)}
+              onToggleAcknowledgeProgram={handleToggleAcknowledgeProgram}
             />
           )}
         </main>

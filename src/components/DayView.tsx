@@ -10,8 +10,12 @@ import {
   Code2,
   ShieldCheck,
   Check,
+  BookOpen,
+  FileCheck2,
 } from 'lucide-react';
 import { HACKERRANK_COURSE_URL } from '../data/curriculum';
+import { SOLVED_PROGRAMS } from '../data/solvedPrograms';
+import { SolvedProgramsSection } from './SolvedProgramsSection';
 
 interface DayViewProps {
   day: number;
@@ -25,6 +29,7 @@ interface DayViewProps {
   onOpenFinalExam: () => void;
   onOpenCertificate: () => void;
   onOpenIDE: (question: Question) => void;
+  onToggleAcknowledgeProgram: (programId: string) => void;
 }
 
 export const DayView: React.FC<DayViewProps> = ({
@@ -39,8 +44,10 @@ export const DayView: React.FC<DayViewProps> = ({
   onOpenFinalExam,
   onOpenCertificate,
   onOpenIDE,
+  onToggleAcknowledgeProgram,
 }) => {
   const [activePart, setActivePart] = useState<1 | 2>(1);
+  const [activeMainView, setActiveMainView] = useState<'syllabus' | 'solved' | 'all'>('syllabus');
   const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(null);
 
   const selectedTopic = topics.find((t) => t.part === activePart) || topics[0];
@@ -86,11 +93,18 @@ export const DayView: React.FC<DayViewProps> = ({
           </div>
 
           {/* Quick Metrics Capsule */}
-          <div className="flex items-center gap-3 self-start sm:self-center">
+          <div className="flex items-center gap-3 self-start sm:self-center flex-wrap">
             <div className="p-3 rounded-2xl border border-slate-200 bg-slate-50 text-right">
               <div className="text-[10px] uppercase font-bold text-slate-400">Day Progress</div>
               <div className="text-sm font-mono font-extrabold text-slate-800">
                 {completedQuestionsInDay} / {totalQuestionsInDay} Solved
+              </div>
+            </div>
+
+            <div className="p-3 rounded-2xl border border-emerald-200 bg-emerald-50/70 text-right">
+              <div className="text-[10px] uppercase font-bold text-emerald-700">Solved Exemplars</div>
+              <div className="text-sm font-mono font-extrabold text-emerald-900">
+                {SOLVED_PROGRAMS.filter((p) => p.day === day && (progress.acknowledgedSolvedProgramIds || []).includes(p.id)).length} / 6 Done
               </div>
             </div>
 
@@ -168,9 +182,62 @@ export const DayView: React.FC<DayViewProps> = ({
         </div>
       </div>
 
-      {/* Part 1 vs Part 2 Selector Tabs */}
-      <div className="flex border-b border-slate-200 gap-2">
-        {topics.map((t) => (
+      {/* Primary View Switcher: Guided Syllabus vs. 6 Solved Programs Masterclass */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-2 rounded-2xl bg-slate-100/90 border border-slate-200">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveMainView('syllabus')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all cursor-pointer ${
+              activeMainView === 'syllabus'
+                ? 'bg-white text-indigo-900 shadow-xs border border-slate-200'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <BookOpen className="w-4 h-4 text-indigo-600" />
+            <span>Guided Syllabus & Practice</span>
+            <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[10px] font-mono font-bold">
+              {completedQuestionsInDay}/{totalQuestionsInDay}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveMainView('solved')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all cursor-pointer ${
+              activeMainView === 'solved'
+                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <FileCheck2 className="w-4 h-4 text-amber-300" />
+            <span>6 Solved Programs (2 Easy • 2 Med • 2 Hard)</span>
+            <span className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold ${
+              activeMainView === 'solved' ? 'bg-emerald-700 text-white' : 'bg-emerald-100 text-emerald-800'
+            }`}>
+              {SOLVED_PROGRAMS.filter((p) => p.day === day && (progress.acknowledgedSolvedProgramIds || []).includes(p.id)).length}/6 Done
+            </span>
+          </button>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setActiveMainView(activeMainView === 'all' ? 'syllabus' : 'all')}
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border self-start sm:self-center cursor-pointer ${
+            activeMainView === 'all'
+              ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs'
+              : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+          }`}
+        >
+          {activeMainView === 'all' ? '✓ Showing All Sections' : 'Show All Sections'}
+        </button>
+      </div>
+
+      {/* Part 1 vs Part 2 Syllabus Section */}
+      {(activeMainView === 'syllabus' || activeMainView === 'all') && (
+        <div className="space-y-6">
+          <div className="flex border-b border-slate-200 gap-2">
+            {topics.map((t) => (
           <button
             key={t.code}
             type="button"
@@ -292,6 +359,19 @@ export const DayView: React.FC<DayViewProps> = ({
             ))}
         </div>
       </div>
+      </div>
+      )}
+
+      {/* 6 Solved Programs Masterclass (2 Easy • 2 Medium • 2 Hard) */}
+      {(activeMainView === 'solved' || activeMainView === 'all') && (
+        <SolvedProgramsSection
+          day={day}
+          programs={SOLVED_PROGRAMS}
+          acknowledgedIds={progress.acknowledgedSolvedProgramIds || []}
+          onToggleAcknowledge={onToggleAcknowledgeProgram}
+          onOpenIDE={onOpenIDE}
+        />
+      )}
 
       {/* Day 5 Special: Proctored Exam & Certificate Gateway Banner */}
       {day === 5 && (
