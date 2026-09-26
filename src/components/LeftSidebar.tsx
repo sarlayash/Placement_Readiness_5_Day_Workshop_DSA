@@ -14,6 +14,8 @@ import {
   PanelLeftOpen,
   Code2,
   Lightbulb,
+  Zap,
+  Brain,
 } from 'lucide-react';
 import { HACKERRANK_COURSE_URL } from '../data/curriculum';
 import { SOLVED_PROGRAMS } from '../data/solvedPrograms';
@@ -35,6 +37,8 @@ interface LeftSidebarProps {
   onOpenFinalExam: () => void;
   onOpenInterviewTips: () => void;
   onOpenIDE: () => void;
+  onOpenSpinningWheel?: () => void;
+  onOpenAptitude?: () => void;
 }
 
 const DAY_METADATA = [
@@ -62,6 +66,8 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   onOpenFinalExam,
   onOpenInterviewTips,
   onOpenIDE,
+  onOpenSpinningWheel,
+  onOpenAptitude,
 }) => {
   const isDraggingRef = useRef(false);
 
@@ -263,6 +269,50 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
               <div className="px-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
                 <span className="rainbow-text font-black">Interactive Tools</span>
               </div>
+            )}
+
+            {/* Wheel of Fortune Button */}
+            {onOpenSpinningWheel && (
+              <button
+                type="button"
+                onClick={onOpenSpinningWheel}
+                title={isCollapsed ? 'Spinning Wheel (10 MCQs)' : undefined}
+                className={`w-full flex items-center rounded-xl border border-amber-500/40 bg-gradient-to-r from-amber-950/40 to-orange-950/30 hover:bg-amber-900/40 text-amber-200 text-xs font-bold transition-all cursor-pointer shadow-xs ${
+                  isCollapsed ? 'p-2 justify-center' : 'p-2.5 justify-between'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-amber-400 shrink-0 animate-pulse" />
+                  {!isCollapsed && <span>Wheel of Fortune</span>}
+                </div>
+                {!isCollapsed && (
+                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-900 text-amber-300 font-mono">
+                    10 MCQs
+                  </span>
+                )}
+              </button>
+            )}
+
+            {/* 25 Aptitude MCQs Button */}
+            {onOpenAptitude && (
+              <button
+                type="button"
+                onClick={onOpenAptitude}
+                title={isCollapsed ? '25 Placement Aptitude MCQs' : undefined}
+                className={`w-full flex items-center rounded-xl border border-indigo-500/40 bg-[#0a1a3a] hover:bg-[#112652] text-indigo-200 text-xs font-bold transition-all cursor-pointer shadow-xs ${
+                  isCollapsed ? 'p-2 justify-center' : 'p-2.5 justify-between'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Brain className="w-4 h-4 text-indigo-400 shrink-0" />
+                  {!isCollapsed && <span>25 Aptitude MCQs</span>}
+                </div>
+                {!isCollapsed && (
+                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-900 text-indigo-300 font-mono">
+                    DSA Link
+                  </span>
+                )}
+              </button>
             )}
 
             {/* Launch Browser IDE Button */}

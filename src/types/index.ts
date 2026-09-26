@@ -119,3 +119,39 @@ export interface UserProgress {
   customNotes: Record<string, string>;
   questionCodeSnippets?: Record<string, Record<string, string>>;
 }
+
+export interface WheelSlice {
+  id: string;
+  label: string;
+  bonus: number;
+  penalty: number;
+  color: string;
+  tier: string;
+}
+
+export interface SpinningWheelMCQ {
+  id: string;
+  question: string;
+  options: string[];
+  correctAnswer: number;
+  explanation: string;
+  topic: string;
+  difficulty: 'Easy' | 'Medium' | 'Hard';
+}
+
+export interface AptitudeMCQ {
+  id: string;
+  category: 'Quantitative' | 'Logical' | 'Number Theory' | 'Combinatorics' | 'Algorithmic';
+  question: string;
+  options: string[];
+  correctAnswer: number;
+  explanation: string;
+  linkedDsaProblem: {
+    id: string;
+    title: string;
+    day: number;
+    topic: string;
+    conceptTieIn: string;
+  };
+}
+

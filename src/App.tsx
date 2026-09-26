@@ -21,12 +21,18 @@ import { AssessmentModal } from './components/AssessmentModal';
 import { ProctoredExamModal } from './components/ProctoredExamModal';
 import { CertificateModal } from './components/CertificateModal';
 import { BadgeGallery } from './components/BadgeGallery';
-import { Lock, Unlock, Clock, AlertCircle } from 'lucide-react';
+import { SpinningWheelModal } from './components/SpinningWheelModal';
+import { AptitudeSection } from './components/AptitudeSection';
+import { Lock, Unlock, Clock, AlertCircle, Zap, Brain, LogIn, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export function App() {
   // Authentication State (Strictly Google Login Only)
   const [googleUser, setGoogleUser] = useState<GoogleUser | null>(() => loadGoogleUser());
+  const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
+
+  // Initial Onboarding: BEGIN WITH SPINNING WHEEL (for first-time / non-authenticated visitors)
+  const [showSpinningWheel, setShowSpinningWheel] = useState<boolean>(() => !loadGoogleUser());
 
   // Learning Progress State
   const [progress, setProgress] = useState<UserProgress>(() => loadUserProgress());
@@ -79,16 +85,26 @@ export function App() {
   // Handle Google Sign-in
   const handleGoogleSignIn = (user: GoogleUser) => {
     setGoogleUser(user);
+    setShowAuthModal(false);
     confetti({
-      particleCount: 50,
-      spread: 60,
+      particleCount: 70,
+      spread: 70,
       origin: { y: 0.6 },
-      colors: ['#ffffff', '#a3a3a3'],
+      colors: ['#ffffff', '#a3a3a3', '#6366f1', '#f59e0b'],
     });
   };
 
   const handleSignOut = () => {
     setGoogleUser(null);
+  };
+
+  // Safe Action Guards for Auth-gated operations
+  const requireAuth = (callback: () => void) => {
+    if (!googleUser) {
+      setShowAuthModal(true);
+    } else {
+      callback();
+    }
   };
 
   // Toggle problem completion
@@ -166,20 +182,6 @@ export function App() {
     }
   };
 
-  // Set simulated IST hour
-  const handleSetSimulatedHour = (targetHour: number) => {
-    const d = new Date();
-    // Match IST target hour
-    // IST = UTC + 5.5 hours, so UTC = targetHour - 5.5
-    const utcHours = targetHour - 5.5;
-    d.setUTCHours(Math.floor(utcHours), (utcHours % 1) * 60, 0, 0);
-    setSimulatedDate(d);
-  };
-
-  const handleResetSimulatedTime = () => {
-    setSimulatedDate(null);
-  };
-
   // Filter topics for the active day (Part 1 and Part 2)
   const dayTopics = TOPICS.filter((t) => t.day === currentDay);
 
@@ -192,10 +194,27 @@ export function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-slate-800 selection:bg-indigo-500 selection:text-white">
-      {/* 1. STRICT GOOGLE SIGN UP / LOGIN ONLY (Modal overlay if not authenticated) */}
-      {!googleUser && <GoogleAuthModal onSignIn={handleGoogleSignIn} />}
+      {/* 1. BEGIN WITH SPINNING WHEEL FOR 10 MCQS BONUS + NEGATIVE MARKS */}
+      {showSpinningWheel && (
+        <SpinningWheelModal
+          onClose={() => setShowSpinningWheel(false)}
+          onContinueToHome={() => setShowSpinningWheel(false)}
+          onPromptLogin={() => {
+            setShowSpinningWheel(false);
+            setShowAuthModal(true);
+          }}
+        />
+      )}
 
-      {/* 2. PROPER HEADER */}
+      {/* 2. GOOGLE AUTH MODAL (PROMPT WHEN USER REACHES GATED STEPS) */}
+      {showAuthModal && (
+        <GoogleAuthModal
+          onSignIn={handleGoogleSignIn}
+          onClose={() => setShowAuthModal(false)}
+        />
+      )}
+
+      {/* 3. PROPER HEADER */}
       <Header
         user={googleUser}
         progress={progress}
@@ -205,17 +224,31 @@ export function App() {
         onSignOut={handleSignOut}
         onToggleLeftSidebar={() => setLeftSidebarMobileOpen((prev) => !prev)}
         onOpenBadges={() => setShowBadgeGallery(true)}
-        onOpenCertificate={() => setShowCertificate(true)}
+        onOpenCertificate={() => {
+          requireAuth(() => setShowCertificate(true));
+        }}
         onOpenIDE={() => setActiveIDEQuestion(dayTopics[0]?.questions[0] || TOPICS[0]?.questions[0] || null)}
         onOpenInterviewTips={() => setShowInterviewTips(true)}
+        onOpenSpinningWheel={() => setShowSpinningWheel(true)}
+        onOpenAptitude={() => {
+          const el = document.getElementById('aptitude-section');
+          el?.scrollIntoView({ behavior: 'smooth' });
+        }}
+        onPromptLogin={() => setShowAuthModal(true)}
       />
 
-      {/* 3. MAIN WORKSPACE CONTAINER WITH COLLAPSIBLE NAVY BLUE LEFT SIDEBAR */}
+      {/* 4. MAIN WORKSPACE CONTAINER WITH COLLAPSIBLE NAVY BLUE LEFT SIDEBAR */}
       <div className="flex-1 flex relative bg-white">
         {/* Left Navigation Bar (Navy Blue with Collapse/Expand and Draggable handle) */}
         <LeftSidebar
           currentDay={currentDay}
-          onSelectDay={(day) => setCurrentDay(day)}
+          onSelectDay={(day) => {
+            if (day > 1 && !googleUser) {
+              setShowAuthModal(true);
+            } else {
+              setCurrentDay(day);
+            }
+          }}
           progress={progress}
           istStatus={istStatus}
           demoBypass={demoBypass}
@@ -226,10 +259,19 @@ export function App() {
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
           onOpenBadges={() => setShowBadgeGallery(true)}
-          onOpenCertificate={() => setShowCertificate(true)}
-          onOpenFinalExam={() => setShowProctoredExam(true)}
+          onOpenCertificate={() => {
+            requireAuth(() => setShowCertificate(true));
+          }}
+          onOpenFinalExam={() => {
+            requireAuth(() => setShowProctoredExam(true));
+          }}
           onOpenInterviewTips={() => setShowInterviewTips(true)}
           onOpenIDE={() => setActiveIDEQuestion(dayTopics[0]?.questions[0] || TOPICS[0]?.questions[0] || null)}
+          onOpenSpinningWheel={() => setShowSpinningWheel(true)}
+          onOpenAptitude={() => {
+            const el = document.getElementById('aptitude-section');
+            el?.scrollIntoView({ behavior: 'smooth' });
+          }}
         />
 
         {/* Center Main Content Area */}
@@ -239,60 +281,121 @@ export function App() {
           }}
           className="flex-1 p-4 md:p-8 transition-[margin] duration-200 ease-out max-lg:!ml-0 bg-white"
         >
-          {/* Locked Day Warning Banner if day is locked */}
-          {!dayLockState.unlocked ? (
-            <div className="max-w-2xl mx-auto my-12 p-8 rounded-3xl border border-slate-200 bg-slate-50/70 text-center space-y-4 shadow-sm">
-              <div className="w-14 h-14 rounded-2xl border border-slate-300 bg-white flex items-center justify-center mx-auto text-amber-600 shadow-2xs">
-                <Lock className="w-7 h-7" />
+          {/* Welcome Banner when in Guest / Unauthenticated Mode */}
+          {!googleUser && (
+            <div className="mb-6 p-4 md:p-5 rounded-3xl border border-indigo-200 bg-gradient-to-r from-indigo-50/90 via-purple-50/50 to-amber-50/30 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
+              <div className="flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white font-black flex items-center justify-center text-lg shadow-xs shrink-0">
+                  ★
+                </div>
+                <div>
+                  <div className="text-sm font-black text-slate-900 rainbow-text">
+                    Placement Readiness Diagnostic Mode
+                  </div>
+                  <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
+                    Spin the Wheel for 10 Bonus MCQs & practice the 25 Aptitude MCQs below. Then sign in with Google to save your placement score, unlock Days 2-5, and earn verified Badges.
+                  </p>
+                </div>
               </div>
-              <h2 className="text-xl md:text-2xl font-black rainbow-text">Day {currentDay} is Currently Locked</h2>
-              <p className="text-xs text-slate-600 leading-relaxed max-w-md mx-auto font-medium">
-                {dayLockState.reason}
-              </p>
-              <div className="pt-2 flex items-center justify-center gap-3">
+
+              <div className="flex items-center gap-2 self-start md:self-auto shrink-0 flex-wrap">
                 <button
                   type="button"
-                  onClick={() => setDemoBypass(true)}
-                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-xs hover:opacity-90 transition-all cursor-pointer flex items-center gap-1.5 shadow-xs"
+                  onClick={() => setShowSpinningWheel(true)}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-amber-300 bg-white hover:bg-amber-50 text-amber-900 text-xs font-bold transition-all shadow-2xs cursor-pointer"
                 >
-                  <Unlock className="w-3.5 h-3.5" />
-                  <span>Bypass Lock for Testing</span>
+                  <Zap className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Spin Wheel</span>
                 </button>
-                {currentDay > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => setCurrentDay((prev) => prev - 1)}
-                    className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-semibold hover:border-slate-300"
-                  >
-                    Go Back to Day {currentDay - 1}
-                  </button>
-                )}
+
+                <button
+                  type="button"
+                  onClick={() => setShowAuthModal(true)}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-xs font-extrabold transition-all shadow-xs cursor-pointer"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span>Sign In with Google</span>
+                </button>
               </div>
             </div>
-          ) : (
-            <DayView
-              day={currentDay}
-              topics={dayTopics}
-              progress={progress}
-              istStatus={istStatus}
-              demoBypass={demoBypass}
-              onToggleQuestion={handleToggleQuestion}
-              onOpenPreAssessment={() =>
-                setActiveAssessment({ day: currentDay, type: 'pre' })
-              }
-              onOpenPostAssessment={() =>
-                setActiveAssessment({ day: currentDay, type: 'post' })
-              }
-              onOpenFinalExam={() => setShowProctoredExam(true)}
-              onOpenCertificate={() => setShowCertificate(true)}
-              onOpenIDE={(q) => setActiveIDEQuestion(q)}
-              onToggleAcknowledgeProgram={handleToggleAcknowledgeProgram}
-            />
           )}
+
+          {/* HOME PAGE: 25 APTITUDE MCQS AND LINK WITH DSA PROBLEMS */}
+          <div id="aptitude-section">
+            <AptitudeSection
+              onOpenIDEForQuestion={(q) => setActiveIDEQuestion(q)}
+              onNavigateToDay={(day) => {
+                setCurrentDay(day);
+                const el = document.getElementById('curriculum-workspace-section');
+                el?.scrollIntoView({ behavior: 'smooth' });
+              }}
+            />
+          </div>
+
+          {/* ALL THE CONTENT ALREADY SHOWN: 5-DAY CURRICULUM, 30 SOLVED PROGRAMS, ASSESSMENTS */}
+          <div id="curriculum-workspace-section" className="pt-2">
+            {!dayLockState.unlocked ? (
+              <div className="max-w-2xl mx-auto my-12 p-8 rounded-3xl border border-slate-200 bg-slate-50/70 text-center space-y-4 shadow-sm">
+                <div className="w-14 h-14 rounded-2xl border border-slate-300 bg-white flex items-center justify-center mx-auto text-amber-600 shadow-2xs">
+                  <Lock className="w-7 h-7" />
+                </div>
+                <h2 className="text-xl md:text-2xl font-black rainbow-text">Day {currentDay} is Currently Locked</h2>
+                <p className="text-xs text-slate-600 leading-relaxed max-w-md mx-auto font-medium">
+                  {dayLockState.reason}
+                </p>
+                <div className="pt-2 flex items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setDemoBypass(true)}
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-xs hover:opacity-90 transition-all cursor-pointer flex items-center gap-1.5 shadow-xs"
+                  >
+                    <Unlock className="w-3.5 h-3.5" />
+                    <span>Bypass Lock for Testing</span>
+                  </button>
+                  {currentDay > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setCurrentDay((prev) => prev - 1)}
+                      className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-semibold hover:border-slate-300 cursor-pointer"
+                    >
+                      Go Back to Day {currentDay - 1}
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <DayView
+                day={currentDay}
+                topics={dayTopics}
+                progress={progress}
+                istStatus={istStatus}
+                demoBypass={demoBypass}
+                onToggleQuestion={handleToggleQuestion}
+                onOpenPreAssessment={() =>
+                  requireAuth(() =>
+                    setActiveAssessment({ day: currentDay, type: 'pre' })
+                  )
+                }
+                onOpenPostAssessment={() =>
+                  requireAuth(() =>
+                    setActiveAssessment({ day: currentDay, type: 'post' })
+                  )
+                }
+                onOpenFinalExam={() => {
+                  requireAuth(() => setShowProctoredExam(true));
+                }}
+                onOpenCertificate={() => {
+                  requireAuth(() => setShowCertificate(true));
+                }}
+                onOpenIDE={(q) => setActiveIDEQuestion(q)}
+                onToggleAcknowledgeProgram={handleToggleAcknowledgeProgram}
+              />
+            )}
+          </div>
         </main>
       </div>
 
-      {/* 4. PROPER FOOTER */}
+      {/* 5. PROPER FOOTER */}
       <Footer
         completedCount={completedQuestions}
         totalQuestions={totalQuestions}
@@ -300,7 +403,7 @@ export function App() {
         onResetProgress={handleResetProgress}
       />
 
-      {/* 5. MODALS & POPUPS */}
+      {/* 6. MODALS & POPUPS */}
       {/* In-Browser IDE Workspace (Dark Theme, 6 Languages, Hidden Test Cases) */}
       {activeIDEQuestion && (
         <IDEWorkspace

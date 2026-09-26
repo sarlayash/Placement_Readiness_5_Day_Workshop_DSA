@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { GoogleUser } from '../types';
 import { signInWithGoogleFirebase, DEMO_USER } from '../utils/firebase';
-import { ShieldCheck, Lock, AlertCircle, ArrowRight, UserCheck, Sparkles } from 'lucide-react';
+import { ShieldCheck, Lock, AlertCircle, ArrowRight, UserCheck, Sparkles, X } from 'lucide-react';
 
 interface GoogleAuthModalProps {
   onSignIn: (user: GoogleUser) => void;
+  onClose?: () => void;
 }
 
-export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({ onSignIn }) => {
+export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({ onSignIn, onClose }) => {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -41,6 +42,17 @@ export const GoogleAuthModal: React.FC<GoogleAuthModalProps> = ({ onSignIn }) =>
       <div className="relative w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 md:p-8 text-slate-800 shadow-2xl">
         {/* Top Rainbow Accent Line */}
         <div className="absolute top-0 left-8 right-8 h-1.5 rounded-b-full bg-gradient-to-r from-red-500 via-amber-500 via-emerald-500 via-sky-500 to-purple-600" />
+
+        {/* Optional Close Button */}
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute top-4 right-4 p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
 
         {/* Kapil Branding Header with Rainbow Text */}
         <div className="text-center mt-2 mb-6">
