@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Topic, Question, UserProgress } from '../types';
+import { Topic, Question, UserProgress, FeedbackWindowStatus } from '../types';
 import { ISTStatus } from '../utils/istTime';
 import { checkDayCompletion, checkFinalExamEligibility } from '../utils/prerequisites';
+import { formatFeedbackTimer } from '../utils/feedback';
 import {
   Award,
   ChevronDown,
@@ -16,6 +17,7 @@ import {
   Lock,
   CheckCircle2,
   AlertCircle,
+  MessageSquare,
 } from 'lucide-react';
 import { HACKERRANK_COURSE_URL } from '../data/curriculum';
 import { SOLVED_PROGRAMS } from '../data/solvedPrograms';
@@ -34,6 +36,8 @@ interface DayViewProps {
   onOpenCertificate: () => void;
   onOpenIDE: (question: Question) => void;
   onToggleAcknowledgeProgram: (programId: string) => void;
+  onOpenFeedback?: () => void;
+  feedbackStatus?: FeedbackWindowStatus;
 }
 
 export const DayView: React.FC<DayViewProps> = ({
@@ -49,6 +53,8 @@ export const DayView: React.FC<DayViewProps> = ({
   onOpenCertificate,
   onOpenIDE,
   onToggleAcknowledgeProgram,
+  onOpenFeedback,
+  feedbackStatus,
 }) => {
   const [activePart, setActivePart] = useState<1 | 2>(1);
   const [activeMainView, setActiveMainView] = useState<'syllabus' | 'solved' | 'all'>('syllabus');
@@ -187,6 +193,59 @@ export const DayView: React.FC<DayViewProps> = ({
             </button>
           </div>
         </div>
+
+        {/* Daily Workshop Feedback Card (2:30 PM - 3:30 PM IST) */}
+        {onOpenFeedback && (
+          <div
+            className={`p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+              progress.feedbackSubmitted?.[day]
+                ? 'border-emerald-300 bg-emerald-50/60'
+                : feedbackStatus?.isActive
+                ? 'border-rose-300 bg-rose-50/80 shadow-xs'
+                : 'border-slate-200 bg-slate-50/60'
+            }`}
+          >
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-teal-100 text-teal-800">
+                  Daily Requirement
+                </span>
+                <span className="text-xs font-black text-slate-900 rainbow-text">
+                  Day {day} Workshop Feedback (fpln.site)
+                </span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">
+                  2:30 PM – 3:30 PM IST
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-600 leading-relaxed">
+                {progress.feedbackSubmitted?.[day]
+                  ? `✓ Day ${day} feedback submitted and recorded in your placement portfolio.`
+                  : feedbackStatus?.isActive
+                  ? `🔔 Form is LIVE NOW! Window closes strictly at 3:30 PM IST (${formatFeedbackTimer(
+                      feedbackStatus.timeRemainingSec
+                    )} remaining).`
+                  : `Feedback window opens daily from 2:30 PM to 3:30 PM IST. Same link for all 5 days with daily evaluation.`}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+              <button
+                type="button"
+                onClick={onOpenFeedback}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer ${
+                  progress.feedbackSubmitted?.[day]
+                    ? 'border border-emerald-300 bg-white text-emerald-800 hover:bg-emerald-50'
+                    : feedbackStatus?.isActive
+                    ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white hover:opacity-90 animate-pulse'
+                    : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <MessageSquare className="w-3.5 h-3.5" />
+                <span>{progress.feedbackSubmitted?.[day] ? 'View / Update Feedback' : 'Open Day Feedback'}</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Primary View Switcher: Guided Syllabus vs. 6 Solved Programs Masterclass */}

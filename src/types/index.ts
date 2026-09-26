@@ -118,6 +118,21 @@ export interface UserProgress {
   certificateId: string | null;
   customNotes: Record<string, string>;
   questionCodeSnippets?: Record<string, Record<string, string>>;
+  feedbackSubmitted?: Record<number, boolean>;
+  feedbackSubmittedAt?: Record<number, string>;
+}
+
+export type FeedbackReminderStage = 'none' | '30m' | '10m' | '5m' | 'active' | 'closed';
+
+export interface FeedbackWindowStatus {
+  isActive: boolean;
+  isOpenToday: boolean;
+  currentDay: number;
+  isFilledToday: boolean;
+  timeRemainingSec: number;
+  timeUntilOpenSec: number;
+  reminderStage: FeedbackReminderStage;
+  reminderMessage: string;
 }
 
 export interface WheelSlice {

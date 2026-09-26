@@ -28,6 +28,15 @@ import { AptitudeSection } from './components/AptitudeSection';
 import { PrerequisitesModal } from './components/PrerequisitesModal';
 import { PWAInstallModal } from './components/PWAInstallModal';
 import { MobileBottomNav } from './components/MobileBottomNav';
+import {
+  calculateFeedbackStatus,
+  sendDesktopNotification,
+  hasNotifiedStage,
+  markNotifiedStage,
+  requestNotificationPermission,
+} from './utils/feedback';
+import { FeedbackReminderBanner } from './components/FeedbackReminderBanner';
+import { DailyFeedbackModal } from './components/DailyFeedbackModal';
 import { Lock, Unlock, Clock, AlertCircle, Zap, Brain, LogIn, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -63,6 +72,7 @@ export function App() {
   const [isOnlineState, setIsOnlineState] = useState<boolean>(() => isOnline());
   const [showPWAInstallModal, setShowPWAInstallModal] = useState<boolean>(false);
   const [showPrerequisitesModal, setShowPrerequisitesModal] = useState<boolean>(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState<boolean>(false);
   const [mobileTab, setMobileTab] = useState<'syllabus' | 'aptitude'>('syllabus');
 
   // Modals
@@ -211,6 +221,65 @@ export function App() {
   // Check if current day is unlocked (Strict: Pre-test, Questions, 6 Solved Programs, Post-test & Badge)
   const dayLockState = isDayUnlockedStrict(currentDay, progress, istStatus, demoBypass);
 
+  // Calculate Daily Feedback Window Status (2:30 PM - 3:30 PM IST with 30m, 10m, 5m reminders)
+  const feedbackStatus = calculateFeedbackStatus(currentDay, progress, istStatus, demoBypass);
+
+  // Automated notification dispatcher for 30m, 10m, 5m, and live window
+  useEffect(() => {
+    if (
+      !progress.feedbackSubmitted?.[currentDay] &&
+      (feedbackStatus.reminderStage === '30m' ||
+        feedbackStatus.reminderStage === '10m' ||
+        feedbackStatus.reminderStage === '5m' ||
+        feedbackStatus.reminderStage === 'active')
+    ) {
+      if (!hasNotifiedStage(currentDay, feedbackStatus.reminderStage)) {
+        markNotifiedStage(currentDay, feedbackStatus.reminderStage);
+        sendDesktopNotification(
+          `Placement Readiness: Day ${currentDay} Feedback Reminder`,
+          feedbackStatus.reminderMessage
+        );
+      }
+    }
+  }, [
+    currentDay,
+    feedbackStatus.reminderStage,
+    progress.feedbackSubmitted,
+    feedbackStatus.reminderMessage,
+  ]);
+
+  // Acknowledge Daily Feedback Completion
+  const handleAcknowledgeFeedback = (day: number) => {
+    setProgress((prev) => {
+      const submitted = { ...(prev.feedbackSubmitted || {}) };
+      const timestamps = { ...(prev.feedbackSubmittedAt || {}) };
+      submitted[day] = true;
+      timestamps[day] = new Date().toISOString();
+      return {
+        ...prev,
+        feedbackSubmitted: submitted,
+        feedbackSubmittedAt: timestamps,
+      };
+    });
+  };
+
+  // Simulate IST Time for Testing Reminders (30m, 10m, 5m, active)
+  const handleSimulateFeedbackTime = (hour: number, minute: number) => {
+    const d = new Date();
+    let utcHour = hour - 5;
+    let utcMinute = minute - 30;
+    if (utcMinute < 0) {
+      utcMinute += 60;
+      utcHour -= 1;
+    }
+    d.setUTCHours(utcHour, utcMinute, 0, 0);
+    setSimulatedDate(d);
+  };
+
+  const handleResetSimulateFeedbackTime = () => {
+    setSimulatedDate(null);
+  };
+
   // Strict Final Exam Gatekeeper (Day 5 Proctored Exam requires 100% completion of Days 1 to 5)
   const handleOpenFinalExam = () => {
     requireAuth(() => {
@@ -229,6 +298,13 @@ export function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-slate-800 selection:bg-indigo-500 selection:text-white pb-14 md:pb-0">
+      {/* Daily Feedback Reminder Alert Banner (Active during 30m, 10m, 5m, and live window) */}
+      <FeedbackReminderBanner
+        status={feedbackStatus}
+        onOpenModal={() => setShowFeedbackModal(true)}
+        onRequestNotifications={requestNotificationPermission}
+      />
+
       {/* 1. BEGIN WITH SPINNING WHEEL FOR 10 MCQS BONUS + NEGATIVE MARKS */}
       {showSpinningWheel && (
         <SpinningWheelModal
@@ -272,6 +348,8 @@ export function App() {
         onPromptLogin={() => setShowAuthModal(true)}
         onOpenPWAInstall={() => setShowPWAInstallModal(true)}
         isOnline={isOnlineState}
+        feedbackStatus={feedbackStatus}
+        onOpenFeedback={() => setShowFeedbackModal(true)}
       />
 
       {/* 4. MAIN WORKSPACE CONTAINER WITH COLLAPSIBLE NAVY BLUE LEFT SIDEBAR */}
@@ -308,6 +386,8 @@ export function App() {
             el?.scrollIntoView({ behavior: 'smooth' });
           }}
           onOpenPWAInstall={() => setShowPWAInstallModal(true)}
+          onOpenFeedback={() => setShowFeedbackModal(true)}
+          feedbackStatus={feedbackStatus}
         />
 
         {/* Center Main Content Area */}
@@ -423,6 +503,8 @@ export function App() {
                 }}
                 onOpenIDE={(q) => setActiveIDEQuestion(q)}
                 onToggleAcknowledgeProgram={handleToggleAcknowledgeProgram}
+                onOpenFeedback={() => setShowFeedbackModal(true)}
+                feedbackStatus={feedbackStatus}
               />
             )}
           </div>
@@ -454,6 +536,9 @@ export function App() {
         onOpenIDE={() => setActiveIDEQuestion(dayTopics[0]?.questions[0] || TOPICS[0]?.questions[0] || null)}
         onOpenBadges={() => setShowBadgeGallery(true)}
         isOnline={isOnlineState}
+        onOpenFeedback={() => setShowFeedbackModal(true)}
+        feedbackActive={feedbackStatus.isActive}
+        feedbackFilled={feedbackStatus.isFilledToday}
       />
 
       {/* 7. MODALS & POPUPS */}
@@ -534,6 +619,20 @@ export function App() {
       {/* Progressive Web App (PWA) Offline Install Modal */}
       {showPWAInstallModal && (
         <PWAInstallModal onClose={() => setShowPWAInstallModal(false)} />
+      )}
+
+      {/* Daily Workshop Feedback Modal (Active 2:30 PM - 3:30 PM IST) */}
+      {showFeedbackModal && (
+        <DailyFeedbackModal
+          day={currentDay}
+          status={feedbackStatus}
+          progress={progress}
+          onAcknowledgeFeedback={handleAcknowledgeFeedback}
+          onClose={() => setShowFeedbackModal(false)}
+          onSimulateTime={handleSimulateFeedbackTime}
+          onResetSimulatedTime={handleResetSimulateFeedbackTime}
+          isSimulated={simulatedDate !== null}
+        />
       )}
     </div>
   );

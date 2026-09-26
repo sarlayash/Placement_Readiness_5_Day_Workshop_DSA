@@ -16,6 +16,8 @@ export const INITIAL_PROGRESS: UserProgress = {
   finalExamDate: null,
   certificateId: null,
   customNotes: {},
+  feedbackSubmitted: {},
+  feedbackSubmittedAt: {},
 };
 
 export function loadGoogleUser(): GoogleUser | null {
@@ -44,7 +46,13 @@ export function loadUserProgress(): UserProgress {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_PROGRESS);
     if (!raw) return INITIAL_PROGRESS;
-    return { ...INITIAL_PROGRESS, ...JSON.parse(raw) };
+    const parsed = JSON.parse(raw);
+    return {
+      ...INITIAL_PROGRESS,
+      ...parsed,
+      feedbackSubmitted: parsed.feedbackSubmitted || {},
+      feedbackSubmittedAt: parsed.feedbackSubmittedAt || {},
+    };
   } catch {
     return INITIAL_PROGRESS;
   }

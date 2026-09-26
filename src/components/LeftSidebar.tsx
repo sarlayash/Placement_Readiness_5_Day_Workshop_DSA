@@ -1,5 +1,5 @@
 import React, { useRef, useCallback } from 'react';
-import { UserProgress } from '../types';
+import { UserProgress, FeedbackWindowStatus } from '../types';
 import { ISTStatus } from '../utils/istTime';
 import { isDayUnlockedStrict, checkDayCompletion } from '../utils/prerequisites';
 import {
@@ -18,6 +18,7 @@ import {
   Zap,
   Brain,
   Smartphone,
+  MessageSquare,
 } from 'lucide-react';
 import { HACKERRANK_COURSE_URL } from '../data/curriculum';
 import { SOLVED_PROGRAMS } from '../data/solvedPrograms';
@@ -42,6 +43,8 @@ interface LeftSidebarProps {
   onOpenSpinningWheel?: () => void;
   onOpenAptitude?: () => void;
   onOpenPWAInstall?: () => void;
+  onOpenFeedback?: () => void;
+  feedbackStatus?: FeedbackWindowStatus;
 }
 
 const DAY_METADATA = [
@@ -72,6 +75,8 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   onOpenSpinningWheel,
   onOpenAptitude,
   onOpenPWAInstall,
+  onOpenFeedback,
+  feedbackStatus,
 }) => {
   const isDraggingRef = useRef(false);
 
@@ -359,6 +364,42 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
                 </span>
               )}
             </button>
+
+            {/* Daily Feedback Button (2:30 PM - 3:30 PM IST) */}
+            {onOpenFeedback && (
+              <button
+                type="button"
+                onClick={onOpenFeedback}
+                title={isCollapsed ? `Daily Feedback (Day ${currentDay})` : undefined}
+                className={`w-full flex items-center rounded-xl border transition-all cursor-pointer shadow-xs ${
+                  isCollapsed ? 'p-2 justify-center' : 'p-2.5 justify-between'
+                } ${
+                  feedbackStatus?.isFilledToday
+                    ? 'border-emerald-600/50 bg-emerald-950/30 text-emerald-200 hover:bg-emerald-900/40'
+                    : feedbackStatus?.isActive
+                    ? 'border-rose-500/80 bg-rose-950/40 text-rose-200 hover:bg-rose-900/50 animate-pulse'
+                    : 'border-teal-700/40 bg-[#092233] text-teal-200 hover:bg-[#0c2e45]'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-teal-400 shrink-0" />
+                  {!isCollapsed && <span>Daily Feedback</span>}
+                </div>
+                {!isCollapsed && (
+                  <span
+                    className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${
+                      feedbackStatus?.isFilledToday
+                        ? 'bg-emerald-900 text-emerald-300'
+                        : feedbackStatus?.isActive
+                        ? 'bg-rose-900 text-rose-200 font-bold'
+                        : 'bg-teal-950 text-teal-300'
+                    }`}
+                  >
+                    {feedbackStatus?.isFilledToday ? '✓ Done' : feedbackStatus?.isActive ? 'LIVE NOW' : '2:30 PM'}
+                  </span>
+                )}
+              </button>
+            )}
           </div>
 
           {/* Section: Honors & Certifications */}

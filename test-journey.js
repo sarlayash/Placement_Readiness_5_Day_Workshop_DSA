@@ -92,6 +92,26 @@ const bottomNavCode = fs.readFileSync(path.join(__dirname, 'src/components/Mobil
 assert(bottomNavCode.includes('Offline Mode Active'), 'Mobile nav displays offline notice banner');
 assert(bottomNavCode.includes('md:hidden'), 'Bottom nav is responsive for mobile and tablet views');
 
+console.log('\n--- 6. AUDITING DAILY FEEDBACK LINK & REMINDER TIMELINES ---');
+const feedbackCode = fs.readFileSync(path.join(__dirname, 'src/utils/feedback.ts'), 'utf8');
+assert(feedbackCode.includes('https://fpln.site/feedback/form.php?id=4gvfOQ8m'), 'Correct feedback URL fpln.site configured');
+assert(feedbackCode.includes('startHour: 14') && feedbackCode.includes('startMinute: 30'), 'Feedback starts at 2:30 PM IST (14:30)');
+assert(feedbackCode.includes('endHour: 15') && feedbackCode.includes('endMinute: 30'), 'Feedback closes at 3:30 PM IST (15:30)');
+assert(feedbackCode.includes('reminder30mMinute: 0'), '30-minute reminder scheduled for 2:00 PM IST');
+assert(feedbackCode.includes('reminder10mMinute: 20'), '10-minute reminder scheduled for 2:20 PM IST');
+assert(feedbackCode.includes('reminder5mMinute: 25'), '5-minute reminder scheduled for 2:25 PM IST');
+
+const feedbackModalCode = fs.readFileSync(path.join(__dirname, 'src/components/DailyFeedbackModal.tsx'), 'utf8');
+assert(feedbackModalCode.includes('Daily Workshop Feedback'), 'Daily feedback modal title verified');
+assert(feedbackModalCode.includes('2:30 PM – 3:30 PM IST'), 'Window timing clearly displayed');
+assert(feedbackModalCode.includes('Simulate 2:00 PM'), 'Tester simulator controls present');
+
+const feedbackBannerCode = fs.readFileSync(path.join(__dirname, 'src/components/FeedbackReminderBanner.tsx'), 'utf8');
+assert(feedbackBannerCode.includes('30-Min Reminder'), '30-min reminder banner verified');
+assert(feedbackBannerCode.includes('10-Min Reminder'), '10-min reminder banner verified');
+assert(feedbackBannerCode.includes('5-Min Reminder'), '5-min reminder banner verified');
+assert(feedbackBannerCode.includes('LIVE NOW'), 'Live active banner verified');
+
 console.log('\n=====================================================');
 if (failedTests === 0) {
   console.log('🎉 ALL AUDIT & DEEP VERIFICATION CHECKS PASSED (100%)');

@@ -1,5 +1,4 @@
-import React from 'react';
-import { GoogleUser, UserProgress } from '../types';
+import { GoogleUser, UserProgress, FeedbackWindowStatus } from '../types';
 import { ISTStatus } from '../utils/istTime';
 import {
   Clock,
@@ -16,6 +15,7 @@ import {
   LogIn,
   Smartphone,
   WifiOff,
+  MessageSquare,
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -35,6 +35,8 @@ interface HeaderProps {
   onPromptLogin?: () => void;
   onOpenPWAInstall?: () => void;
   isOnline?: boolean;
+  feedbackStatus?: FeedbackWindowStatus;
+  onOpenFeedback?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -54,6 +56,8 @@ export const Header: React.FC<HeaderProps> = ({
   onPromptLogin,
   onOpenPWAInstall,
   isOnline = true,
+  feedbackStatus,
+  onOpenFeedback,
 }) => {
   const badgeCount = Object.values(progress.badgesUnlocked).filter(Boolean).length;
 
@@ -219,6 +223,42 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
               <span>Playbook</span>
+            </button>
+          )}
+
+          {/* Daily Workshop Feedback Button (2:30 PM - 3:30 PM IST) */}
+          {onOpenFeedback && (
+            <button
+              type="button"
+              onClick={onOpenFeedback}
+              className={`flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-xs cursor-pointer ${
+                feedbackStatus?.isFilledToday
+                  ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
+                  : feedbackStatus?.isActive
+                  ? 'border-rose-400 bg-rose-600 text-white animate-pulse'
+                  : feedbackStatus?.reminderStage === '5m' || feedbackStatus?.reminderStage === '10m' || feedbackStatus?.reminderStage === '30m'
+                  ? 'border-amber-300 bg-amber-50 text-amber-900 animate-pulse'
+                  : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+              }`}
+              title="Daily Workshop Feedback (Active 2:30 PM - 3:30 PM IST daily)"
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              {feedbackStatus?.isFilledToday ? (
+                <>
+                  <span className="hidden sm:inline">Feedback Done</span>
+                  <span className="sm:hidden">Feedback ✓</span>
+                </>
+              ) : feedbackStatus?.isActive ? (
+                <>
+                  <span className="hidden sm:inline">Feedback LIVE</span>
+                  <span className="sm:hidden">Live!</span>
+                </>
+              ) : (
+                <>
+                  <span className="hidden sm:inline">Daily Feedback</span>
+                  <span className="sm:hidden">Feedback</span>
+                </>
+              )}
             </button>
           )}
 
