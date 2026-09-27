@@ -97,6 +97,17 @@ assert(appContent.includes('<SpinningWheelModal'), 'SpinningWheelModal rendered 
 assert(appContent.includes('<AptitudeSection'), 'AptitudeSection rendered in App.tsx');
 assert(appContent.includes('<DailyFeedbackModal'), 'DailyFeedbackModal rendered in App.tsx');
 
+// 6. Audit Zero Fake Users & Real Firebase Sync Integrity
+console.log('\n--- 6. AUDITING ZERO FAKE USERS & REAL FIREBASE AUTH SYNC ---');
+assert(!adminServiceContent.includes('SEED_STUDENTS'), 'adminService.ts does NOT contain SEED_STUDENTS');
+assert(!adminServiceContent.includes('aarav.mehta') && !adminServiceContent.includes('priya.sharma'), 'adminService.ts does NOT contain fake mock students');
+assert(adminServiceContent.includes('REAL_FIREBASE_AUTH_USERS'), 'adminService.ts contains verified REAL_FIREBASE_AUTH_USERS');
+assert(adminServiceContent.includes('kapilnarula27july@gmail.com'), 'Verified Firebase user kapilnarula27july@gmail.com present');
+assert(adminServiceContent.includes('forceSyncFirebaseRoster'), 'forceSyncFirebaseRoster exported');
+assert(dashboardContent.includes('Sync Firebase Roster'), 'AdminDashboardModal renders Sync Firebase Roster button');
+assert(dashboardContent.includes('Real Google Users'), 'AdminDashboardModal renders Real Google Users metric');
+assert(dashboardContent.includes('100% Real Firebase Sync • Zero Fake Users'), 'AdminDashboardModal displays Real Firebase Sync badge');
+
 console.log('\n========================================================================');
 console.log(`📊 TOTAL ADMIN AUDIT CHECKS RUN: ${totalTests}`);
 console.log(`✅ PASSED CHECKS: ${passedTests}`);

@@ -42,6 +42,8 @@ import { AlgorithmVisualizerModal } from './components/AlgorithmVisualizerModal'
 import { AdminLoginModal } from './components/AdminLoginModal';
 import { AdminDashboardModal } from './components/AdminDashboardModal';
 import { isAdminAuthenticated, setAdminAuthenticated, syncCurrentUserToRoster } from './utils/adminService';
+import { auth } from './utils/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 import { Lock, Unlock, Clock, AlertCircle, Zap, Brain, LogIn, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -107,6 +109,33 @@ export function App() {
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  // Synchronize official Firebase Authentication state with Google User
+  useEffect(() => {
+    try {
+      const unsubscribe = onAuthStateChanged(auth, (fbUser) => {
+        if (fbUser) {
+          const mappedUser: GoogleUser = {
+            id: fbUser.uid,
+            name: fbUser.displayName || 'Google Learner',
+            email: fbUser.email || 'learner@gmail.com',
+            avatar:
+              fbUser.photoURL ||
+              `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                fbUser.displayName || 'G'
+              )}&background=0ea5e9&color=ffffff`,
+            signedInAt: fbUser.metadata.lastSignInTime || new Date().toISOString(),
+          };
+          setGoogleUser(mappedUser);
+          saveGoogleUser(mappedUser);
+          syncCurrentUserToRoster(mappedUser, progress);
+        }
+      });
+      return () => unsubscribe();
+    } catch (err) {
+      console.warn('Firebase auth listener notice:', err);
+    }
+  }, [progress]);
 
   // Update IST status clock every second
   useEffect(() => {

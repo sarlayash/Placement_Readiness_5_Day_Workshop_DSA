@@ -43,245 +43,222 @@ export function setAdminAuthenticated(val: boolean): void {
   }
 }
 
-// Initial realistic JIET Placement batch cohort
-const SEED_STUDENTS: StudentRecord[] = [
+// Verified Real Google Accounts registered in official Firebase Authentication
+export const REAL_FIREBASE_AUTH_USERS: Array<{
+  localId: string;
+  email: string;
+  displayName: string;
+  photoUrl: string;
+  createdAt: string;
+  lastSignedInAt: string;
+}> = [
   {
-    id: 'stud-jiet-01',
-    name: 'Aarav Mehta',
-    email: 'aarav.mehta@jietjodhpur.ac.in',
-    rollNo: '22JIETCS001',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Aarav',
-    loginProvider: 'Google Auth',
-    registeredAt: '2026-09-23T08:15:00Z',
-    lastActive: '2026-09-27T17:40:00Z',
-    progress: {
-      completedQuestionIds: ['q-t1-1', 'q-t1-2', 'q-t1-3', 'q-t2-1', 'q-t2-2', 'q-t3-1', 'q-t4-1', 'q-t5-1', 'q-t7-1', 'q-t9-1'],
-      acknowledgedSolvedProgramIds: ['D1-E1', 'D1-E2', 'D1-M1', 'D1-M2', 'D1-H1', 'D1-H2', 'D2-E1', 'D2-E2', 'D2-M1', 'D2-M2', 'D2-H1', 'D2-H2', 'D3-E1', 'D3-M1', 'D4-E1', 'D5-E1'],
-      levelZeroCompletedIds: ['lvl0-1', 'lvl0-2', 'lvl0-3', 'lvl0-4', 'lvl0-5', 'lvl0-6', 'lvl0-7', 'lvl0-8', 'lvl0-9', 'lvl0-10'],
-      visualizationCompletedIds: ['linear-search', 'binary-search', 'bubble-sort', 'quick-sort', 'bfs-graph', 'bst-ops'],
-      visualizationTries: { 'linear-search': 3, 'bubble-sort': 3, 'bfs-graph': 2 },
-      dayPreAssessmentPassed: { 1: true, 2: true, 3: true, 4: true, 5: true },
-      dayPostAssessmentPassed: { 1: true, 2: true, 3: true, 4: true, 5: true },
-      dayPreAssessmentScores: { 1: 5, 2: 4, 3: 5, 4: 5, 5: 4 },
-      dayPostAssessmentScores: { 1: 100, 2: 80, 3: 100, 4: 100, 5: 80 },
-      badgesUnlocked: { 1: true, 2: true, 3: true, 4: true, 5: true },
-      finalExamPassed: true,
-      finalExamScore: 92,
-      finalExamDate: '2026-09-27T16:30:00Z',
-      certificateId: 'KAPIL-PRP-2026-AARA-8F92A',
-      customNotes: {},
-      feedbackSubmitted: { 1: true, 2: true, 3: true, 4: true, 5: true },
-    },
-    customBadges: ['Speed Coder Elite', 'Graph Titan'],
+    localId: 'd54RR73wFJOuugNQd66l1EHQ7So1',
+    email: 'kapilnarula27july@gmail.com',
+    displayName: 'Kapil Narula',
+    photoUrl: 'https://lh3.googleusercontent.com/a/ACg8ocLnNMdnJVGTLcBPnQWnmesoD2hNuJmTCM7OucDkk9feknuhKGeoeA=s96-c',
+    createdAt: new Date(1790423702071).toISOString(),
+    lastSignedInAt: new Date(1790518514107).toISOString(),
   },
   {
-    id: 'stud-jiet-02',
-    name: 'Priya Sharma',
-    email: 'priya.sharma@jietjodhpur.ac.in',
-    rollNo: '22JIETCS014',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Priya',
-    loginProvider: 'Google Auth',
-    registeredAt: '2026-09-23T08:20:00Z',
-    lastActive: '2026-09-27T18:10:00Z',
-    progress: {
-      completedQuestionIds: ['q-t1-1', 'q-t1-2', 'q-t2-1', 'q-t3-1', 'q-t4-1', 'q-t5-1', 'q-t7-1'],
-      acknowledgedSolvedProgramIds: ['D1-E1', 'D1-E2', 'D1-M1', 'D1-M2', 'D1-H1', 'D1-H2', 'D2-E1', 'D2-E2', 'D2-M1', 'D2-M2', 'D2-H1', 'D2-H2', 'D3-E1', 'D3-E2', 'D3-M1', 'D3-M2', 'D3-H1', 'D3-H2'],
-      levelZeroCompletedIds: ['lvl0-1', 'lvl0-2', 'lvl0-3', 'lvl0-4', 'lvl0-5'],
-      visualizationCompletedIds: ['linear-search', 'binary-search', 'bubble-sort', 'insertion-sort'],
-      visualizationTries: { 'linear-search': 2, 'binary-search': 3 },
-      dayPreAssessmentPassed: { 1: true, 2: true, 3: true, 4: true },
-      dayPostAssessmentPassed: { 1: true, 2: true, 3: true, 4: false },
-      dayPreAssessmentScores: { 1: 4, 2: 5, 3: 4, 4: 4 },
-      dayPostAssessmentScores: { 1: 80, 2: 100, 3: 80, 4: 40 },
-      badgesUnlocked: { 1: true, 2: true, 3: true },
-      finalExamPassed: false,
-      finalExamScore: 0,
-      finalExamDate: null,
-      certificateId: null,
-      customNotes: {},
-      feedbackSubmitted: { 1: true, 2: true, 3: true },
-    },
-    customBadges: ['Dynamic Programming Ace'],
-  },
-  {
-    id: 'stud-jiet-03',
-    name: 'Rohan Singhania',
-    email: 'rohan.singhania@jietjodhpur.ac.in',
-    rollNo: '22JIETCS029',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rohan',
-    loginProvider: 'Google Auth',
-    registeredAt: '2026-09-23T08:22:00Z',
-    lastActive: '2026-09-27T17:55:00Z',
-    progress: {
-      completedQuestionIds: ['q-t1-1', 'q-t1-2', 'q-t2-1', 'q-t2-2', 'q-t3-1', 'q-t3-2', 'q-t4-1', 'q-t4-2', 'q-t5-1', 'q-t6-1', 'q-t7-1', 'q-t8-1', 'q-t9-1', 'q-t10-1'],
-      acknowledgedSolvedProgramIds: [
-        'D1-E1', 'D1-E2', 'D1-M1', 'D1-M2', 'D1-H1', 'D1-H2',
-        'D2-E1', 'D2-E2', 'D2-M1', 'D2-M2', 'D2-H1', 'D2-H2',
-        'D3-E1', 'D3-E2', 'D3-M1', 'D3-M2', 'D3-H1', 'D3-H2',
-        'D4-E1', 'D4-E2', 'D4-M1', 'D4-M2', 'D4-H1', 'D4-H2',
-        'D5-E1', 'D5-E2', 'D5-M1', 'D5-M2', 'D5-H1', 'D5-H2',
-      ],
-      levelZeroCompletedIds: ['lvl0-1', 'lvl0-2', 'lvl0-3', 'lvl0-4', 'lvl0-5', 'lvl0-6', 'lvl0-7', 'lvl0-8', 'lvl0-9', 'lvl0-10'],
-      visualizationCompletedIds: ['linear-search', 'binary-search', 'bubble-sort', 'selection-sort', 'insertion-sort', 'merge-sort', 'quick-sort', 'bfs-graph', 'dfs-graph', 'dijkstra-graph', 'bst-ops', 'tree-traversal'],
-      visualizationTries: { 'dijkstra-graph': 3, 'quick-sort': 3, 'bst-ops': 3 },
-      dayPreAssessmentPassed: { 1: true, 2: true, 3: true, 4: true, 5: true },
-      dayPostAssessmentPassed: { 1: true, 2: true, 3: true, 4: true, 5: true },
-      dayPreAssessmentScores: { 1: 5, 2: 5, 3: 5, 4: 5, 5: 5 },
-      dayPostAssessmentScores: { 1: 100, 2: 100, 3: 100, 4: 100, 5: 100 },
-      badgesUnlocked: { 1: true, 2: true, 3: true, 4: true, 5: true },
-      finalExamPassed: true,
-      finalExamScore: 98,
-      finalExamDate: '2026-09-27T17:15:00Z',
-      certificateId: 'KAPIL-PRP-2026-ROHA-7C34D',
-      customNotes: {},
-      feedbackSubmitted: { 1: true, 2: true, 3: true, 4: true, 5: true },
-    },
-    customBadges: ['Placement Masterclass Topper', 'Grandmaster Algorithmist'],
-  },
-  {
-    id: 'stud-jiet-04',
-    name: 'Ananya Verma',
-    email: 'ananya.verma@jietjodhpur.ac.in',
-    rollNo: '22JIETCS033',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ananya',
-    loginProvider: 'Google Auth',
-    registeredAt: '2026-09-23T08:35:00Z',
-    lastActive: '2026-09-27T16:50:00Z',
-    progress: {
-      completedQuestionIds: ['q-t1-1', 'q-t1-2', 'q-t2-1', 'q-t3-1', 'q-t4-1'],
-      acknowledgedSolvedProgramIds: ['D1-E1', 'D1-E2', 'D1-M1', 'D1-M2', 'D1-H1', 'D1-H2', 'D2-E1', 'D2-E2'],
-      levelZeroCompletedIds: ['lvl0-1', 'lvl0-2', 'lvl0-3', 'lvl0-4'],
-      visualizationCompletedIds: ['linear-search', 'binary-search'],
-      visualizationTries: { 'linear-search': 1 },
-      dayPreAssessmentPassed: { 1: true, 2: true },
-      dayPostAssessmentPassed: { 1: true, 2: true },
-      dayPreAssessmentScores: { 1: 4, 2: 4 },
-      dayPostAssessmentScores: { 1: 80, 2: 80 },
-      badgesUnlocked: { 1: true, 2: true },
-      finalExamPassed: false,
-      finalExamScore: 0,
-      finalExamDate: null,
-      certificateId: null,
-      customNotes: {},
-      feedbackSubmitted: { 1: true, 2: true },
-    },
-  },
-  {
-    id: 'stud-jiet-05',
-    name: 'Devendra Rathore',
-    email: 'devendra.rathore@jietjodhpur.ac.in',
-    rollNo: '22JIETCS048',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Devendra',
-    loginProvider: 'Google Auth',
-    registeredAt: '2026-09-23T08:40:00Z',
-    lastActive: '2026-09-27T15:20:00Z',
-    progress: {
-      completedQuestionIds: ['q-t1-1', 'q-t1-2', 'q-t2-1', 'q-t2-2', 'q-t3-1', 'q-t4-1', 'q-t5-1'],
-      acknowledgedSolvedProgramIds: ['D1-E1', 'D1-E2', 'D1-M1', 'D1-M2', 'D1-H1', 'D1-H2', 'D2-E1', 'D2-E2', 'D2-M1', 'D2-M2'],
-      levelZeroCompletedIds: ['lvl0-1', 'lvl0-2', 'lvl0-3'],
-      visualizationCompletedIds: ['bubble-sort', 'quick-sort'],
-      visualizationTries: { 'bubble-sort': 3 },
-      dayPreAssessmentPassed: { 1: true, 2: true, 3: true },
-      dayPostAssessmentPassed: { 1: true, 2: true, 3: false },
-      dayPreAssessmentScores: { 1: 5, 2: 4, 3: 3 },
-      dayPostAssessmentScores: { 1: 100, 2: 80, 3: 40 },
-      badgesUnlocked: { 1: true, 2: true },
-      finalExamPassed: false,
-      finalExamScore: 0,
-      finalExamDate: null,
-      certificateId: null,
-      customNotes: {},
-      feedbackSubmitted: { 1: true, 2: true },
-    },
-  },
-  {
-    id: 'stud-jiet-06',
-    name: 'Kavita Chhajed',
-    email: 'kavita.c@jietjodhpur.ac.in',
-    rollNo: '22JIETCS055',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Kavita',
-    loginProvider: 'Google Auth',
-    registeredAt: '2026-09-23T08:45:00Z',
-    lastActive: '2026-09-27T17:25:00Z',
-    progress: {
-      completedQuestionIds: ['q-t1-1', 'q-t1-2', 'q-t2-1', 'q-t2-2', 'q-t3-1', 'q-t3-2', 'q-t4-1', 'q-t4-2', 'q-t5-1', 'q-t7-1', 'q-t8-1'],
-      acknowledgedSolvedProgramIds: [
-        'D1-E1', 'D1-E2', 'D1-M1', 'D1-M2', 'D1-H1', 'D1-H2',
-        'D2-E1', 'D2-E2', 'D2-M1', 'D2-M2', 'D2-H1', 'D2-H2',
-        'D3-E1', 'D3-E2', 'D3-M1', 'D3-M2', 'D3-H1', 'D3-H2',
-        'D4-E1', 'D4-E2', 'D4-M1', 'D4-M2',
-      ],
-      levelZeroCompletedIds: ['lvl0-1', 'lvl0-2', 'lvl0-3', 'lvl0-4', 'lvl0-5', 'lvl0-6', 'lvl0-7', 'lvl0-8'],
-      visualizationCompletedIds: ['linear-search', 'binary-search', 'bubble-sort', 'merge-sort', 'bfs-graph', 'dfs-graph'],
-      visualizationTries: { 'bfs-graph': 3, 'dfs-graph': 2 },
-      dayPreAssessmentPassed: { 1: true, 2: true, 3: true, 4: true },
-      dayPostAssessmentPassed: { 1: true, 2: true, 3: true, 4: true },
-      dayPreAssessmentScores: { 1: 5, 2: 5, 3: 4, 4: 5 },
-      dayPostAssessmentScores: { 1: 100, 2: 100, 3: 80, 4: 100 },
-      badgesUnlocked: { 1: true, 2: true, 3: true, 4: true },
-      finalExamPassed: false,
-      finalExamScore: 0,
-      finalExamDate: null,
-      certificateId: null,
-      customNotes: {},
-      feedbackSubmitted: { 1: true, 2: true, 3: true, 4: true },
-    },
-    customBadges: ['Consistent Achiever'],
-  },
-  {
-    id: 'stud-jiet-07',
-    name: 'Siddharth Dave',
-    email: 'siddharth.dave@jietjodhpur.ac.in',
-    rollNo: '22JIETCS068',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Siddharth',
-    loginProvider: 'Google Auth',
-    registeredAt: '2026-09-23T08:50:00Z',
-    lastActive: '2026-09-27T18:05:00Z',
-    progress: {
-      completedQuestionIds: ['q-t1-1', 'q-t1-2', 'q-t2-1', 'q-t2-2', 'q-t3-1', 'q-t4-1', 'q-t5-1', 'q-t6-1', 'q-t7-1', 'q-t8-1', 'q-t9-1', 'q-t10-1'],
-      acknowledgedSolvedProgramIds: [
-        'D1-E1', 'D1-E2', 'D1-M1', 'D1-M2', 'D1-H1', 'D1-H2',
-        'D2-E1', 'D2-E2', 'D2-M1', 'D2-M2', 'D2-H1', 'D2-H2',
-        'D3-E1', 'D3-E2', 'D3-M1', 'D3-M2', 'D3-H1', 'D3-H2',
-        'D4-E1', 'D4-E2', 'D4-M1', 'D4-M2', 'D4-H1', 'D4-H2',
-        'D5-E1', 'D5-E2', 'D5-M1', 'D5-M2', 'D5-H1', 'D5-H2',
-      ],
-      levelZeroCompletedIds: ['lvl0-1', 'lvl0-2', 'lvl0-3', 'lvl0-4', 'lvl0-5', 'lvl0-6', 'lvl0-7', 'lvl0-8', 'lvl0-9', 'lvl0-10'],
-      visualizationCompletedIds: ['linear-search', 'binary-search', 'bubble-sort', 'selection-sort', 'merge-sort', 'quick-sort', 'bfs-graph', 'dfs-graph', 'dijkstra-graph', 'bst-ops', 'tree-traversal'],
-      visualizationTries: { 'dijkstra-graph': 3, 'bst-ops': 2 },
-      dayPreAssessmentPassed: { 1: true, 2: true, 3: true, 4: true, 5: true },
-      dayPostAssessmentPassed: { 1: true, 2: true, 3: true, 4: true, 5: true },
-      dayPreAssessmentScores: { 1: 5, 2: 4, 3: 5, 4: 5, 5: 5 },
-      dayPostAssessmentScores: { 1: 100, 2: 80, 3: 100, 4: 100, 5: 100 },
-      badgesUnlocked: { 1: true, 2: true, 3: true, 4: true, 5: true },
-      finalExamPassed: true,
-      finalExamScore: 94,
-      finalExamDate: '2026-09-27T17:00:00Z',
-      certificateId: 'KAPIL-PRP-2026-SIDD-5B12F',
-      customNotes: {},
-      feedbackSubmitted: { 1: true, 2: true, 3: true, 4: true, 5: true },
-    },
-    customBadges: ['Placement Ready Champion'],
+    localId: 'oUnE3NqZyeTInVVJPekHiiKJXcJ2',
+    email: 'onerupeefullstackceo@gmail.com',
+    displayName: 'Kapil',
+    photoUrl: 'https://lh3.googleusercontent.com/a/ACg8ocIiEurDJoQxCvlQX-gtxcRTVrkjGuTx4GTF_NFZ3P7aSMLk9Dk=s96-c',
+    createdAt: new Date(1790423761651).toISOString(),
+    lastSignedInAt: new Date(1790423761652).toISOString(),
   },
 ];
 
-// Load Student Roster
+// Helper to generate empty progress with zero fake numbers
+export function createEmptyUserProgress(): UserProgress {
+  return {
+    completedQuestionIds: [],
+    acknowledgedSolvedProgramIds: [],
+    levelZeroCompletedIds: [],
+    visualizationCompletedIds: [],
+    visualizationTries: {},
+    dayPreAssessmentPassed: {},
+    dayPostAssessmentPassed: {},
+    dayPreAssessmentScores: {},
+    dayPostAssessmentScores: {},
+    badgesUnlocked: {},
+    finalExamPassed: false,
+    finalExamScore: 0,
+    finalExamDate: null,
+    certificateId: null,
+    customNotes: {},
+    feedbackSubmitted: {},
+    feedbackSubmittedAt: {},
+  };
+}
+
+// Build verified Real Firebase Student records (100% Real Google Users)
+export function getInitialRealStudents(): StudentRecord[] {
+  let currentGoogleUser: GoogleUser | null = null;
+  let currentUserProgress: UserProgress | null = null;
+  try {
+    const rawUser = localStorage.getItem('kapil_prp_google_user');
+    if (rawUser) currentGoogleUser = JSON.parse(rawUser);
+    const rawProg = localStorage.getItem('kapil_prp_progress');
+    if (rawProg) currentUserProgress = JSON.parse(rawProg);
+  } catch {
+    // ignore
+  }
+
+  const list: StudentRecord[] = REAL_FIREBASE_AUTH_USERS.map((fbUser) => {
+    const isCurrentUser =
+      currentGoogleUser &&
+      (currentGoogleUser.email.toLowerCase() === fbUser.email.toLowerCase() ||
+        currentGoogleUser.id === fbUser.localId);
+
+    const progress =
+      isCurrentUser && currentUserProgress
+        ? currentUserProgress
+        : createEmptyUserProgress();
+
+    return {
+      id: fbUser.localId,
+      name: fbUser.displayName,
+      email: fbUser.email,
+      rollNo: `UID-${fbUser.localId.substring(0, 8)}`,
+      avatar: fbUser.photoUrl,
+      loginProvider: 'Google Auth (Firebase)',
+      registeredAt: fbUser.createdAt,
+      lastActive: isCurrentUser ? new Date().toISOString() : fbUser.lastSignedInAt,
+      progress,
+      customBadges: [],
+      customCertificates: [],
+    };
+  });
+
+  // If active user is another Google user not yet in REAL_FIREBASE_AUTH_USERS, add them
+  if (
+    currentGoogleUser &&
+    currentGoogleUser.email &&
+    !list.some((s) => s.email.toLowerCase() === currentGoogleUser!.email.toLowerCase())
+  ) {
+    list.unshift({
+      id: currentGoogleUser.id,
+      name: currentGoogleUser.name,
+      email: currentGoogleUser.email,
+      rollNo: `UID-${(currentGoogleUser.id || '').substring(0, 8) || 'GOOG'}`,
+      avatar: currentGoogleUser.avatar,
+      loginProvider: 'Google Auth (Firebase)',
+      registeredAt: currentGoogleUser.signedInAt || new Date().toISOString(),
+      lastActive: new Date().toISOString(),
+      progress: currentUserProgress || createEmptyUserProgress(),
+      customBadges: [],
+      customCertificates: [],
+    });
+  }
+
+  return list;
+}
+
+// Load Student Roster - STRICTLY REAL GOOGLE USERS ONLY, ZERO FAKE DATA
 export function getAllStudents(): StudentRecord[] {
   try {
     const raw = localStorage.getItem(STORAGE_ROSTER);
-    if (!raw) {
-      localStorage.setItem(STORAGE_ROSTER, JSON.stringify(SEED_STUDENTS));
-      return SEED_STUDENTS;
+    let list: StudentRecord[] = [];
+
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          // STRICT PURGE: Strip ANY fake / seeded mock users (e.g. stud-jiet-*)
+          list = parsed.filter(
+            (s: StudentRecord) =>
+              s.loginProvider?.includes('Google') &&
+              !s.id?.startsWith('stud-') &&
+              !s.rollNo?.startsWith('22JIET')
+          );
+        }
+      } catch {
+        list = [];
+      }
     }
-    const parsed: StudentRecord[] = JSON.parse(raw);
-    if (!Array.isArray(parsed) || parsed.length === 0) {
-      localStorage.setItem(STORAGE_ROSTER, JSON.stringify(SEED_STUDENTS));
-      return SEED_STUDENTS;
+
+    if (list.length === 0) {
+      list = getInitialRealStudents();
+    } else {
+      // Ensure known Firebase Auth accounts are present
+      REAL_FIREBASE_AUTH_USERS.forEach((fbUser) => {
+        const exists = list.some(
+          (s) =>
+            s.email.toLowerCase() === fbUser.email.toLowerCase() ||
+            s.id === fbUser.localId
+        );
+        if (!exists) {
+          list.push({
+            id: fbUser.localId,
+            name: fbUser.displayName,
+            email: fbUser.email,
+            rollNo: `UID-${fbUser.localId.substring(0, 8)}`,
+            avatar: fbUser.photoUrl,
+            loginProvider: 'Google Auth (Firebase)',
+            registeredAt: fbUser.createdAt,
+            lastActive: fbUser.lastSignedInAt,
+            progress: createEmptyUserProgress(),
+            customBadges: [],
+            customCertificates: [],
+          });
+        }
+      });
     }
-    return parsed;
+
+    // Attach active logged-in Google learner's live progress
+    try {
+      const rawUser = localStorage.getItem('kapil_prp_google_user');
+      const rawProg = localStorage.getItem('kapil_prp_progress');
+      if (rawUser && rawProg) {
+        const u: GoogleUser = JSON.parse(rawUser);
+        const p: UserProgress = JSON.parse(rawProg);
+        const curIdx = list.findIndex(
+          (s) =>
+            s.email.toLowerCase() === u.email.toLowerCase() ||
+            s.id === u.id
+        );
+        if (curIdx >= 0) {
+          list[curIdx].progress = p;
+          list[curIdx].lastActive = new Date().toISOString();
+        } else if (u.email) {
+          list.unshift({
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            rollNo: `UID-${(u.id || '').substring(0, 8) || 'GOOG'}`,
+            avatar: u.avatar,
+            loginProvider: 'Google Auth (Firebase)',
+            registeredAt: u.signedInAt || new Date().toISOString(),
+            lastActive: new Date().toISOString(),
+            progress: p,
+            customBadges: [],
+            customCertificates: [],
+          });
+        }
+      }
+    } catch {
+      // ignore
+    }
+
+    localStorage.setItem(STORAGE_ROSTER, JSON.stringify(list));
+    return list;
   } catch {
-    return SEED_STUDENTS;
+    const initials = getInitialRealStudents();
+    localStorage.setItem(STORAGE_ROSTER, JSON.stringify(initials));
+    return initials;
   }
+}
+
+// Force-sync real Firebase users and clean any stale data
+export function forceSyncFirebaseRoster(): StudentRecord[] {
+  try {
+    localStorage.removeItem(STORAGE_ROSTER);
+  } catch {
+    // ignore
+  }
+  return getAllStudents();
 }
 
 // Sync active learner into student roster
@@ -306,12 +283,12 @@ export function syncCurrentUserToRoster(user: GoogleUser, progress: UserProgress
       };
     } else {
       const newStudent: StudentRecord = {
-        id: user.id || `stud-${Date.now()}`,
+        id: user.id || `google-${Date.now()}`,
         name: user.name,
         email: user.email,
-        rollNo: `22JIETCS${String(students.length + 1).padStart(3, '0')}`,
+        rollNo: `UID-${(user.id || '').substring(0, 8) || 'GOOG'}`,
         avatar: user.avatar,
-        loginProvider: 'Google Auth',
+        loginProvider: 'Google Auth (Firebase)',
         registeredAt: user.signedInAt || nowIso,
         lastActive: nowIso,
         progress: progress,
@@ -374,7 +351,7 @@ function escapeCSV(val: any): string {
 // Generate Daily CSV Report (Day 1 to 5)
 export function generateDailyCSV(day: number, students: StudentRecord[]): string {
   const headers = [
-    'Roll No',
+    'Google UID / Roll No',
     'Student Name',
     'Email Address',
     'Day',
@@ -401,7 +378,7 @@ export function generateDailyCSV(day: number, students: StudentRecord[]): string
     const lastActiveIST = s.lastActive ? new Date(s.lastActive).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : 'N/A';
 
     return [
-      escapeCSV(s.rollNo || 'N/A'),
+      escapeCSV(s.rollNo || s.id || 'N/A'),
       escapeCSV(s.name),
       escapeCSV(s.email),
       escapeCSV(`Day ${day}`),
@@ -423,7 +400,7 @@ export function generateDailyCSV(day: number, students: StudentRecord[]): string
 // Generate Consolidated 5-Day Master CSV Report
 export function generateMasterCSV(students: StudentRecord[]): string {
   const headers = [
-    'Roll No',
+    'Google UID / Roll No',
     'Student Name',
     'Email Address',
     'Day 1 (%)',
@@ -463,7 +440,7 @@ export function generateMasterCSV(students: StudentRecord[]): string {
     const lastActiveIST = s.lastActive ? new Date(s.lastActive).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : 'N/A';
 
     return [
-      escapeCSV(s.rollNo || 'N/A'),
+      escapeCSV(s.rollNo || s.id || 'N/A'),
       escapeCSV(s.name),
       escapeCSV(s.email),
       escapeCSV(d1),
