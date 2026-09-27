@@ -82,7 +82,7 @@ assert(headerContent.includes('onOpenAdmin'), 'Header.tsx receives onOpenAdmin p
 assert(headerContent.includes('<Lock'), 'Header.tsx renders Lock icon for Admin');
 assert(sidebarContent.includes('onOpenAdmin'), 'LeftSidebar.tsx receives onOpenAdmin prop');
 assert(sidebarContent.includes('<Lock'), 'LeftSidebar.tsx renders Lock icon for Admin');
-assert(appContent.includes('fixed bottom-5 right-5'), 'App.tsx renders Floating Admin Lock icon on main page');
+assert(appContent.includes('Floating Admin Lock Button on Main Page') && appContent.includes('Admin (Kapil)'), 'App.tsx renders Floating Admin Lock icon on main page');
 assert(appContent.includes('<AdminLoginModal'), 'App.tsx renders AdminLoginModal');
 assert(appContent.includes('<AdminDashboardModal'), 'App.tsx renders AdminDashboardModal');
 assert(appContent.includes('syncCurrentUserToRoster'), 'App.tsx synchronizes active learner into Admin roster');

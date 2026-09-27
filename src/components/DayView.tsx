@@ -41,6 +41,8 @@ interface DayViewProps {
   onOpenVisualizer?: () => void;
   onOpenFeedback?: () => void;
   feedbackStatus?: FeedbackWindowStatus;
+  onOpenAdmin?: () => void;
+  isAdmin?: boolean;
 }
 
 export const DayView: React.FC<DayViewProps> = ({
@@ -60,6 +62,8 @@ export const DayView: React.FC<DayViewProps> = ({
   onOpenVisualizer,
   onOpenFeedback,
   feedbackStatus,
+  onOpenAdmin,
+  isAdmin = false,
 }) => {
   const [activePart, setActivePart] = useState<1 | 2>(1);
   const [activeMainView, setActiveMainView] = useState<'syllabus' | 'solved' | 'all'>('syllabus');
@@ -134,6 +138,28 @@ export const DayView: React.FC<DayViewProps> = ({
                   <div className="text-[10px] text-amber-700 font-semibold">Day {day} Master</div>
                 </div>
               </div>
+            )}
+
+            {/* Kapil's Admin Portal Card */}
+            {onOpenAdmin && (
+              <button
+                type="button"
+                onClick={onOpenAdmin}
+                className={`p-3 rounded-2xl border flex items-center gap-2.5 shadow-xs cursor-pointer transition-all ${
+                  isAdmin
+                    ? 'border-amber-500 bg-amber-500 text-slate-950 font-black shadow-amber-500/20'
+                    : 'border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 text-amber-950 ring-1 ring-amber-300'
+                }`}
+                title="Kapil Administrator Portal"
+              >
+                <div className="p-1 rounded-xl bg-amber-500/20 text-amber-800">
+                  <Lock className="w-4 h-4 text-amber-700" />
+                </div>
+                <div className="text-left text-xs">
+                  <div className="font-extrabold text-amber-950 leading-tight">Admin Portal</div>
+                  <div className="text-[10px] text-amber-800 font-semibold">{isAdmin ? 'Super Admin' : 'Kapil Access'}</div>
+                </div>
+              </button>
             )}
           </div>
         </div>

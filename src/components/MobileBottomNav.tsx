@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, Brain, Zap, Code2, Award, WifiOff, MessageSquare } from 'lucide-react';
+import { BookOpen, Brain, Zap, Code2, Award, WifiOff, MessageSquare, Lock } from 'lucide-react';
 
 interface MobileBottomNavProps {
   currentTab: 'syllabus' | 'aptitude';
@@ -11,6 +11,8 @@ interface MobileBottomNavProps {
   onOpenFeedback?: () => void;
   feedbackActive?: boolean;
   feedbackFilled?: boolean;
+  onOpenAdmin?: () => void;
+  isAdmin?: boolean;
 }
 
 export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
@@ -23,6 +25,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   onOpenFeedback,
   feedbackActive,
   feedbackFilled,
+  onOpenAdmin,
+  isAdmin = false,
 }) => {
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-lg px-1.5 py-1.5 flex items-center justify-around safe-bottom">
@@ -114,6 +118,23 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         <Award className="w-5 h-5 text-amber-500" />
         <span className="text-[9px] mt-0.5">Badges</span>
       </button>
+
+      {/* 7. Admin Lock */}
+      {onOpenAdmin && (
+        <button
+          type="button"
+          onClick={onOpenAdmin}
+          className={`flex flex-col items-center justify-center p-1 rounded-xl transition-all cursor-pointer min-w-[50px] ${
+            isAdmin
+              ? 'text-amber-500 font-black'
+              : 'text-amber-600 hover:text-amber-800 font-bold'
+          }`}
+          title="Kapil Admin Portal"
+        >
+          <Lock className="w-5 h-5 text-amber-600" />
+          <span className="text-[9px] mt-0.5">Admin</span>
+        </button>
+      )}
     </div>
   );
 };

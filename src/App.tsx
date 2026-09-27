@@ -584,6 +584,8 @@ export function App() {
                 onOpenVisualizer={() => setShowVisualizerModal(true)}
                 onOpenFeedback={() => setShowFeedbackModal(true)}
                 feedbackStatus={feedbackStatus}
+                onOpenAdmin={handleOpenAdmin}
+                isAdmin={isAdminLoggedIn}
               />
             )}
           </div>
@@ -618,6 +620,8 @@ export function App() {
         onOpenFeedback={() => setShowFeedbackModal(true)}
         feedbackActive={feedbackStatus.isActive}
         feedbackFilled={feedbackStatus.isFilledToday}
+        onOpenAdmin={handleOpenAdmin}
+        isAdmin={isAdminLoggedIn}
       />
 
       {/* 7. MODALS & POPUPS */}
@@ -733,18 +737,23 @@ export function App() {
         onRecordTry={handleRecordVisualizationTry}
       />
 
-      {/* Floating Admin Lock Icon on Main Page */}
+      {/* Floating Admin Lock Button on Main Page - Unmissable Gold Pill */}
       <button
         type="button"
         onClick={handleOpenAdmin}
-        className={`fixed bottom-5 right-5 z-40 p-3 rounded-full shadow-2xl border transition-all duration-300 cursor-pointer group ${
+        className={`fixed z-50 bottom-20 right-4 md:bottom-8 md:right-8 flex items-center gap-2 px-4 py-2.5 rounded-full shadow-2xl border-2 transition-all duration-300 cursor-pointer active:scale-95 group ${
           isAdminLoggedIn
-            ? 'bg-amber-500 border-amber-300 text-slate-950 hover:bg-amber-400 shadow-amber-500/30'
-            : 'bg-[#091126] border-amber-500/60 text-amber-400 hover:bg-[#0f1b3d] hover:border-amber-400 hover:shadow-amber-500/20 shadow-black/70'
+            ? 'bg-gradient-to-r from-amber-500 to-amber-600 border-amber-300 text-slate-950 font-black shadow-amber-500/40 ring-4 ring-amber-400/30'
+            : 'bg-[#070d1e] hover:bg-[#0c1633] border-amber-400 text-amber-300 font-extrabold shadow-black/80 ring-2 ring-amber-500/30 hover:scale-105'
         }`}
         title={isAdminLoggedIn ? 'Kapil Super Admin Portal (Active)' : 'Admin Login (Kapil)'}
       >
-        <Lock className="w-5 h-5 group-hover:scale-110 transition-transform" />
+        <span className="p-1.5 rounded-full bg-amber-500/20 text-amber-400 group-hover:bg-amber-500 group-hover:text-slate-950 transition-colors">
+          <Lock className="w-4 h-4 text-amber-400 group-hover:text-slate-950" />
+        </span>
+        <span className="text-xs uppercase tracking-wider font-black">
+          {isAdminLoggedIn ? 'Admin (Active)' : 'Admin (Kapil)'}
+        </span>
       </button>
 
       {/* Kapil's Admin Authentication Modal */}

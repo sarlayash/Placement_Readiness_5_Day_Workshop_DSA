@@ -100,8 +100,23 @@ export const Header: React.FC<HeaderProps> = ({
                   5-Day Boot
                 </span>
               </div>
-              <div className="text-[11px] text-slate-500 font-medium">
-                Powered by <strong className="text-slate-900 font-bold">Kapil</strong> • 8 AM - 8 PM IST
+              <div className="text-[11px] text-slate-500 font-medium flex items-center gap-1.5 flex-wrap">
+                <span>Powered by <strong className="text-slate-900 font-bold">Kapil</strong> • 8 AM - 8 PM IST</span>
+                {onOpenAdmin && (
+                  <button
+                    type="button"
+                    onClick={onOpenAdmin}
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-xs cursor-pointer transition-all ${
+                      isAdmin
+                        ? 'bg-amber-500 text-slate-950 border-amber-600 ring-2 ring-amber-300'
+                        : 'bg-amber-100 hover:bg-amber-200 text-amber-950 border-amber-300'
+                    }`}
+                    title="Kapil Administrator Portal"
+                  >
+                    <Lock className="w-2.5 h-2.5 text-amber-800" />
+                    <span>Admin</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -337,13 +352,13 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={onOpenAdmin}
               className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-xs cursor-pointer ${
                 isAdmin
-                  ? 'border-amber-500 bg-amber-500 text-slate-950 font-black shadow-amber-500/20'
-                  : 'border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 text-amber-900'
+                  ? 'border-amber-500 bg-amber-500 text-slate-950 font-black ring-2 ring-amber-300 shadow-amber-500/30'
+                  : 'border-amber-400 bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 text-amber-950 ring-1 ring-amber-300'
               }`}
               title={isAdmin ? 'Kapil Super Admin (Active)' : 'Admin Access (Kapil)'}
             >
-              <Lock className={`w-3.5 h-3.5 ${isAdmin ? 'text-slate-950' : 'text-amber-700'}`} />
-              <span className="hidden sm:inline">Admin</span>
+              <Lock className={`w-3.5 h-3.5 ${isAdmin ? 'text-slate-950' : 'text-amber-800'}`} />
+              <span className="font-extrabold text-[11px] sm:text-xs">Admin</span>
             </button>
           )}
 
@@ -390,13 +405,25 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="font-mono font-medium">{istStatus.istTimeString} IST</span>
           <span>{istStatus.isWithinActiveWindow ? '● Active' : '🔒 Locked'}</span>
         </div>
-        <button
-          type="button"
-          onClick={onToggleDemoBypass}
-          className="text-[10px] underline font-bold text-indigo-600 cursor-pointer"
-        >
-          {demoBypass ? 'Bypass ON' : 'Bypass Lock'}
-        </button>
+        <div className="flex items-center gap-2">
+          {onOpenAdmin && (
+            <button
+              type="button"
+              onClick={onOpenAdmin}
+              className="text-[10px] font-extrabold text-amber-900 bg-amber-200 hover:bg-amber-300 px-2 py-0.5 rounded-md flex items-center gap-1 border border-amber-400 shadow-xs cursor-pointer"
+            >
+              <Lock className="w-2.5 h-2.5 text-amber-800" />
+              <span>Admin Portal</span>
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onToggleDemoBypass}
+            className="text-[10px] underline font-bold text-indigo-600 cursor-pointer"
+          >
+            {demoBypass ? 'Bypass ON' : 'Bypass Lock'}
+          </button>
+        </div>
       </div>
     </header>
   );
