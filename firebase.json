@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "placement-readiness-5-day",
     "public": "dist",
     "ignore": [
       "firebase.json",
