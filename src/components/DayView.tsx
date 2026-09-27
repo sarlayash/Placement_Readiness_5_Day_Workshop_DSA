@@ -36,6 +36,7 @@ interface DayViewProps {
   onOpenCertificate: () => void;
   onOpenIDE: (question: Question) => void;
   onToggleAcknowledgeProgram: (programId: string) => void;
+  onOpenLevelZero?: () => void;
   onOpenFeedback?: () => void;
   feedbackStatus?: FeedbackWindowStatus;
 }
@@ -53,6 +54,7 @@ export const DayView: React.FC<DayViewProps> = ({
   onOpenCertificate,
   onOpenIDE,
   onToggleAcknowledgeProgram,
+  onOpenLevelZero,
   onOpenFeedback,
   feedbackStatus,
 }) => {
@@ -284,6 +286,21 @@ export const DayView: React.FC<DayViewProps> = ({
               {SOLVED_PROGRAMS.filter((p) => p.day === day && (progress.acknowledgedSolvedProgramIds || []).includes(p.id)).length}/6 Done
             </span>
           </button>
+
+          {onOpenLevelZero && (
+            <button
+              type="button"
+              onClick={onOpenLevelZero}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs md:text-sm font-bold transition-all cursor-pointer bg-sky-50 hover:bg-sky-100 text-sky-900 border border-sky-200 shadow-2xs"
+              title="LEVEL 0: 10 Solved Basic Programs in Java, C, C++, Python, HTML/JS"
+            >
+              <Sparkles className="w-4 h-4 text-sky-600 animate-pulse" />
+              <span>LEVEL 0 (10 Solved)</span>
+              <span className="px-1.5 py-0.2 rounded-md bg-sky-200/90 text-sky-900 text-[10px] font-mono font-bold">
+                {progress.levelZeroCompletedIds?.length || 0}/10
+              </span>
+            </button>
+          )}
         </div>
 
         <button

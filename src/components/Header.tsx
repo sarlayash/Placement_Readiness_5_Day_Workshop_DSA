@@ -32,6 +32,7 @@ interface HeaderProps {
   onOpenInterviewTips?: () => void;
   onOpenSpinningWheel?: () => void;
   onOpenAptitude?: () => void;
+  onOpenLevelZero?: () => void;
   onPromptLogin?: () => void;
   onOpenPWAInstall?: () => void;
   isOnline?: boolean;
@@ -53,6 +54,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenInterviewTips,
   onOpenSpinningWheel,
   onOpenAptitude,
+  onOpenLevelZero,
   onPromptLogin,
   onOpenPWAInstall,
   isOnline = true,
@@ -171,6 +173,23 @@ export const Header: React.FC<HeaderProps> = ({
               <Brain className="w-3.5 h-3.5 text-indigo-600" />
               <span className="hidden sm:inline">25 Aptitude</span>
               <span className="sm:hidden">Apt</span>
+            </button>
+          )}
+
+          {/* LEVEL 0 Foundations Button */}
+          {onOpenLevelZero && (
+            <button
+              type="button"
+              onClick={onOpenLevelZero}
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border border-sky-300 bg-gradient-to-r from-sky-50 to-blue-50 hover:from-sky-100 hover:to-blue-100 text-sky-900 text-xs font-bold transition-all shadow-xs cursor-pointer"
+              title="LEVEL 0: 10 Solved Basic Programs in Java, C, C++, Python, HTML"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-sky-600 animate-pulse" />
+              <span className="hidden sm:inline">LEVEL 0</span>
+              <span className="sm:hidden">L0</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-sky-200/90 text-sky-900 font-mono">
+                {progress.levelZeroCompletedIds?.length || 0}/10
+              </span>
             </button>
           )}
 

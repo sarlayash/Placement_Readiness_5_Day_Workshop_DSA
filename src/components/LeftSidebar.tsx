@@ -42,6 +42,7 @@ interface LeftSidebarProps {
   onOpenIDE: () => void;
   onOpenSpinningWheel?: () => void;
   onOpenAptitude?: () => void;
+  onOpenLevelZero?: () => void;
   onOpenPWAInstall?: () => void;
   onOpenFeedback?: () => void;
   feedbackStatus?: FeedbackWindowStatus;
@@ -74,6 +75,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   onOpenIDE,
   onOpenSpinningWheel,
   onOpenAptitude,
+  onOpenLevelZero,
   onOpenPWAInstall,
   onOpenFeedback,
   feedbackStatus,
@@ -159,6 +161,37 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
 
         {/* Scrollable Navigation List */}
         <div className="flex-1 overflow-y-auto p-2.5 space-y-4">
+          {/* LEVEL 0: Foundations (10 Solved Programs) */}
+          {onOpenLevelZero && (
+            <button
+              type="button"
+              onClick={onOpenLevelZero}
+              title={isCollapsed ? 'LEVEL 0: 10 Solved Programs' : undefined}
+              className={`w-full flex items-center rounded-xl border border-sky-500/50 bg-gradient-to-r from-sky-950/60 via-blue-950/40 to-slate-900/60 hover:bg-sky-900/40 text-sky-200 text-xs font-bold transition-all cursor-pointer shadow-xs ${
+                isCollapsed ? 'p-2 justify-center' : 'p-2.5 justify-between'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-sky-400 shrink-0 animate-pulse" />
+                {!isCollapsed && (
+                  <div className="text-left">
+                    <div className="font-extrabold text-white flex items-center gap-1.5">
+                      <span className="rainbow-text">LEVEL 0: Foundations</span>
+                    </div>
+                    <div className="text-[10px] text-sky-300 font-normal">
+                      10 Solved (Java, C, C++, Python, HTML)
+                    </div>
+                  </div>
+                )}
+              </div>
+              {!isCollapsed && (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-900/80 text-sky-200 font-mono font-bold border border-sky-700/60">
+                  {progress.levelZeroCompletedIds?.length || 0}/10
+                </span>
+              )}
+            </button>
+          )}
+
           {/* Section: 5-Day Curriculum */}
           <div className="space-y-1.5">
             {!isCollapsed && (

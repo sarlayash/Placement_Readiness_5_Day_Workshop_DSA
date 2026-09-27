@@ -6,6 +6,7 @@ const STORAGE_KEY_PROGRESS = 'kapil_prp_user_progress';
 export const INITIAL_PROGRESS: UserProgress = {
   completedQuestionIds: [],
   acknowledgedSolvedProgramIds: [],
+  levelZeroCompletedIds: [],
   dayPreAssessmentPassed: {},
   dayPostAssessmentPassed: {},
   dayPreAssessmentScores: {},
@@ -50,6 +51,7 @@ export function loadUserProgress(): UserProgress {
     return {
       ...INITIAL_PROGRESS,
       ...parsed,
+      levelZeroCompletedIds: parsed.levelZeroCompletedIds || [],
       feedbackSubmitted: parsed.feedbackSubmitted || {},
       feedbackSubmittedAt: parsed.feedbackSubmittedAt || {},
     };

@@ -37,6 +37,7 @@ import {
 } from './utils/feedback';
 import { FeedbackReminderBanner } from './components/FeedbackReminderBanner';
 import { DailyFeedbackModal } from './components/DailyFeedbackModal';
+import { LevelZeroModal } from './components/LevelZeroModal';
 import { Lock, Unlock, Clock, AlertCircle, Zap, Brain, LogIn, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -83,6 +84,7 @@ export function App() {
   const [showProctoredExam, setShowProctoredExam] = useState<boolean>(false);
   const [showCertificate, setShowCertificate] = useState<boolean>(false);
   const [showBadgeGallery, setShowBadgeGallery] = useState<boolean>(false);
+  const [showLevelZeroModal, setShowLevelZeroModal] = useState<boolean>(false);
 
   // Online / offline listeners
   useEffect(() => {
@@ -165,6 +167,21 @@ export function App() {
       return {
         ...prev,
         acknowledgedSolvedProgramIds: updated,
+      };
+    });
+  };
+
+  // Toggle Level 0 basic program completed acknowledgement
+  const handleToggleLevelZeroProgram = (programId: string) => {
+    setProgress((prev) => {
+      const current = prev.levelZeroCompletedIds || [];
+      const exists = current.includes(programId);
+      const updated = exists
+        ? current.filter((id) => id !== programId)
+        : [...current, programId];
+      return {
+        ...prev,
+        levelZeroCompletedIds: updated,
       };
     });
   };
@@ -345,6 +362,7 @@ export function App() {
           const el = document.getElementById('aptitude-section');
           el?.scrollIntoView({ behavior: 'smooth' });
         }}
+        onOpenLevelZero={() => setShowLevelZeroModal(true)}
         onPromptLogin={() => setShowAuthModal(true)}
         onOpenPWAInstall={() => setShowPWAInstallModal(true)}
         isOnline={isOnlineState}
@@ -385,6 +403,7 @@ export function App() {
             const el = document.getElementById('aptitude-section');
             el?.scrollIntoView({ behavior: 'smooth' });
           }}
+          onOpenLevelZero={() => setShowLevelZeroModal(true)}
           onOpenPWAInstall={() => setShowPWAInstallModal(true)}
           onOpenFeedback={() => setShowFeedbackModal(true)}
           feedbackStatus={feedbackStatus}
@@ -503,6 +522,7 @@ export function App() {
                 }}
                 onOpenIDE={(q) => setActiveIDEQuestion(q)}
                 onToggleAcknowledgeProgram={handleToggleAcknowledgeProgram}
+                onOpenLevelZero={() => setShowLevelZeroModal(true)}
                 onOpenFeedback={() => setShowFeedbackModal(true)}
                 feedbackStatus={feedbackStatus}
               />
@@ -634,6 +654,15 @@ export function App() {
           isSimulated={simulatedDate !== null}
         />
       )}
+
+      {/* LEVEL 0: 10 Solved Basic Programs Modal */}
+      <LevelZeroModal
+        isOpen={showLevelZeroModal}
+        onClose={() => setShowLevelZeroModal(false)}
+        completedIds={progress.levelZeroCompletedIds || []}
+        onToggleComplete={handleToggleLevelZeroProgram}
+        onOpenIDE={(q) => setActiveIDEQuestion(q)}
+      />
     </div>
   );
 }

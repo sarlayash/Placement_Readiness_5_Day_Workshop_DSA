@@ -15,7 +15,7 @@ export interface Question {
   number?: number;
   name: string;
   type: 'inclass' | 'postclass';
-  difficulty: 'Easy' | 'Medium' | 'Hard';
+  difficulty: 'Level 0' | 'Easy' | 'Medium' | 'Hard';
   description: string;
   inputFormat: string;
   outputFormat: string;
@@ -88,10 +88,10 @@ export interface ProctorLog {
 }
 
 export interface SolvedProgram {
-  id: string; // e.g., "D1-E1", "D1-E2", "D1-M1", "D1-M2", "D1-H1", "D1-H2"
-  day: number; // 1 to 5
+  id: string; // e.g., "D1-E1", "lvl0-1"
+  day: number; // 0 for Level 0, 1 to 5 for Daily Solved
   title: string;
-  difficulty: 'Easy' | 'Medium' | 'Hard';
+  difficulty: 'Level 0' | 'Easy' | 'Medium' | 'Hard';
   topicTag: string;
   problemStatement: string;
   sampleInput: string;
@@ -107,6 +107,7 @@ export interface SolvedProgram {
 export interface UserProgress {
   completedQuestionIds: string[];
   acknowledgedSolvedProgramIds: string[];
+  levelZeroCompletedIds?: string[];
   dayPreAssessmentPassed: Record<number, boolean>;
   dayPostAssessmentPassed: Record<number, boolean>;
   dayPreAssessmentScores: Record<number, number>;

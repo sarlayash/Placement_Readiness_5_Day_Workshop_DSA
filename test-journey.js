@@ -112,6 +112,23 @@ assert(feedbackBannerCode.includes('10-Min Reminder'), '10-min reminder banner v
 assert(feedbackBannerCode.includes('5-Min Reminder'), '5-min reminder banner verified');
 assert(feedbackBannerCode.includes('LIVE NOW'), 'Live active banner verified');
 
+console.log('\n--- 7. AUDITING LEVEL 0 PROGRAMS & 5-LANGUAGE COMPATIBILITY ---');
+const levelZeroRaw = fs.readFileSync(path.join(__dirname, 'src/data/levelZeroPrograms.ts'), 'utf8');
+const lvl0Matches = levelZeroRaw.match(/id:\s*'lvl0-\d+'/g) || [];
+assert(lvl0Matches.length === 10, `Exactly 10 LEVEL 0 programs exist (found ${lvl0Matches.length})`);
+
+for (let i = 1; i <= 10; i++) {
+  assert(levelZeroRaw.includes(`id: 'lvl0-${i}'`), `Level 0 program lvl0-${i} exists`);
+}
+
+assert(levelZeroRaw.includes("difficulty: 'Level 0'"), "Level 0 difficulty tags configured");
+assert(levelZeroRaw.includes("java:") && levelZeroRaw.includes("c:") && levelZeroRaw.includes("cpp:") && levelZeroRaw.includes("python:") && levelZeroRaw.includes("html:"), "All 5 core languages (Java, C, C++, Python, HTML) present in solutions");
+
+const levelZeroModalRaw = fs.readFileSync(path.join(__dirname, 'src/components/LevelZeroModal.tsx'), 'utf8');
+assert(levelZeroModalRaw.includes('LEVEL 0: 10 Solved Basic Programs'), 'Level 0 modal title verified');
+assert(levelZeroModalRaw.includes('Java') && levelZeroModalRaw.includes('C++') && levelZeroModalRaw.includes('Python') && levelZeroModalRaw.includes('HTML'), 'Language switcher verified in LevelZeroModal');
+assert(levelZeroModalRaw.includes('Live Preview') || levelZeroModalRaw.includes('sandbox="allow-scripts"'), 'HTML interactive sandbox/preview verified in LevelZeroModal');
+
 console.log('\n=====================================================');
 if (failedTests === 0) {
   console.log('🎉 ALL AUDIT & DEEP VERIFICATION CHECKS PASSED (100%)');
