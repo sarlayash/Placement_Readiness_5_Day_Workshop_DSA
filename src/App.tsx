@@ -38,6 +38,7 @@ import {
 import { FeedbackReminderBanner } from './components/FeedbackReminderBanner';
 import { DailyFeedbackModal } from './components/DailyFeedbackModal';
 import { LevelZeroModal } from './components/LevelZeroModal';
+import { AlgorithmVisualizerModal } from './components/AlgorithmVisualizerModal';
 import { Lock, Unlock, Clock, AlertCircle, Zap, Brain, LogIn, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -85,6 +86,7 @@ export function App() {
   const [showCertificate, setShowCertificate] = useState<boolean>(false);
   const [showBadgeGallery, setShowBadgeGallery] = useState<boolean>(false);
   const [showLevelZeroModal, setShowLevelZeroModal] = useState<boolean>(false);
+  const [showVisualizerModal, setShowVisualizerModal] = useState<boolean>(false);
 
   // Online / offline listeners
   useEffect(() => {
@@ -182,6 +184,33 @@ export function App() {
       return {
         ...prev,
         levelZeroCompletedIds: updated,
+      };
+    });
+  };
+
+  // Toggle Algorithm Visualization completed acknowledgement
+  const handleToggleVisualizationComplete = (algoId: string) => {
+    setProgress((prev) => {
+      const current = prev.visualizationCompletedIds || [];
+      const exists = current.includes(algoId);
+      const updated = exists
+        ? current.filter((id) => id !== algoId)
+        : [...current, algoId];
+      return {
+        ...prev,
+        visualizationCompletedIds: updated,
+      };
+    });
+  };
+
+  // Record practice try for algorithm visualization (tracks 1/3, 2/3, 3/3)
+  const handleRecordVisualizationTry = (algoId: string) => {
+    setProgress((prev) => {
+      const currentTries = { ...(prev.visualizationTries || {}) };
+      currentTries[algoId] = (currentTries[algoId] || 0) + 1;
+      return {
+        ...prev,
+        visualizationTries: currentTries,
       };
     });
   };
@@ -363,6 +392,7 @@ export function App() {
           el?.scrollIntoView({ behavior: 'smooth' });
         }}
         onOpenLevelZero={() => setShowLevelZeroModal(true)}
+        onOpenVisualizer={() => setShowVisualizerModal(true)}
         onPromptLogin={() => setShowAuthModal(true)}
         onOpenPWAInstall={() => setShowPWAInstallModal(true)}
         isOnline={isOnlineState}
@@ -404,6 +434,7 @@ export function App() {
             el?.scrollIntoView({ behavior: 'smooth' });
           }}
           onOpenLevelZero={() => setShowLevelZeroModal(true)}
+          onOpenVisualizer={() => setShowVisualizerModal(true)}
           onOpenPWAInstall={() => setShowPWAInstallModal(true)}
           onOpenFeedback={() => setShowFeedbackModal(true)}
           feedbackStatus={feedbackStatus}
@@ -523,6 +554,7 @@ export function App() {
                 onOpenIDE={(q) => setActiveIDEQuestion(q)}
                 onToggleAcknowledgeProgram={handleToggleAcknowledgeProgram}
                 onOpenLevelZero={() => setShowLevelZeroModal(true)}
+                onOpenVisualizer={() => setShowVisualizerModal(true)}
                 onOpenFeedback={() => setShowFeedbackModal(true)}
                 feedbackStatus={feedbackStatus}
               />
@@ -662,6 +694,16 @@ export function App() {
         completedIds={progress.levelZeroCompletedIds || []}
         onToggleComplete={handleToggleLevelZeroProgram}
         onOpenIDE={(q) => setActiveIDEQuestion(q)}
+      />
+
+      {/* Interactive Algorithm Visualizer Lab Modal (Searching, Sorting, Graphs, Trees) */}
+      <AlgorithmVisualizerModal
+        isOpen={showVisualizerModal}
+        onClose={() => setShowVisualizerModal(false)}
+        completedIds={progress.visualizationCompletedIds || []}
+        triesMap={progress.visualizationTries || {}}
+        onToggleComplete={handleToggleVisualizationComplete}
+        onRecordTry={handleRecordVisualizationTry}
       />
     </div>
   );

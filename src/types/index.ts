@@ -108,6 +108,8 @@ export interface UserProgress {
   completedQuestionIds: string[];
   acknowledgedSolvedProgramIds: string[];
   levelZeroCompletedIds?: string[];
+  visualizationCompletedIds?: string[];
+  visualizationTries?: Record<string, number>;
   dayPreAssessmentPassed: Record<number, boolean>;
   dayPostAssessmentPassed: Record<number, boolean>;
   dayPreAssessmentScores: Record<number, number>;
@@ -121,6 +123,22 @@ export interface UserProgress {
   questionCodeSnippets?: Record<string, Record<string, string>>;
   feedbackSubmitted?: Record<number, boolean>;
   feedbackSubmittedAt?: Record<number, string>;
+}
+
+export type VisualizationCategory = 'Searching' | 'Sorting' | 'Graphs' | 'Trees';
+
+export interface AlgorithmVisualization {
+  id: string;
+  category: VisualizationCategory;
+  name: string;
+  tagline: string;
+  timeComplexity: string;
+  spaceComplexity: string;
+  description: string;
+  kapilRule: string;
+  defaultInput: string;
+  targetLabel?: string;
+  defaultTarget?: number;
 }
 
 export type FeedbackReminderStage = 'none' | '30m' | '10m' | '5m' | 'active' | 'closed';

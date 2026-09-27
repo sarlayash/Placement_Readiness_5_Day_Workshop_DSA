@@ -7,6 +7,8 @@ export const INITIAL_PROGRESS: UserProgress = {
   completedQuestionIds: [],
   acknowledgedSolvedProgramIds: [],
   levelZeroCompletedIds: [],
+  visualizationCompletedIds: [],
+  visualizationTries: {},
   dayPreAssessmentPassed: {},
   dayPostAssessmentPassed: {},
   dayPreAssessmentScores: {},
@@ -52,6 +54,8 @@ export function loadUserProgress(): UserProgress {
       ...INITIAL_PROGRESS,
       ...parsed,
       levelZeroCompletedIds: parsed.levelZeroCompletedIds || [],
+      visualizationCompletedIds: parsed.visualizationCompletedIds || [],
+      visualizationTries: parsed.visualizationTries || {},
       feedbackSubmitted: parsed.feedbackSubmitted || {},
       feedbackSubmittedAt: parsed.feedbackSubmittedAt || {},
     };

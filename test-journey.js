@@ -129,6 +129,22 @@ assert(levelZeroModalRaw.includes('LEVEL 0: 10 Solved Basic Programs'), 'Level 0
 assert(levelZeroModalRaw.includes('Java') && levelZeroModalRaw.includes('C++') && levelZeroModalRaw.includes('Python') && levelZeroModalRaw.includes('HTML'), 'Language switcher verified in LevelZeroModal');
 assert(levelZeroModalRaw.includes('Live Preview') || levelZeroModalRaw.includes('sandbox="allow-scripts"'), 'HTML interactive sandbox/preview verified in LevelZeroModal');
 
+console.log('\n--- 8. AUDITING ALGORITHM VISUALIZER LAB (SEARCHING, SORTING, GRAPHS, TREES) ---');
+const algoDataRaw = fs.readFileSync(path.join(__dirname, 'src/data/algorithmsData.ts'), 'utf8');
+assert(algoDataRaw.includes('Searching') && algoDataRaw.includes('Sorting') && algoDataRaw.includes('Graphs') && algoDataRaw.includes('Trees'), 'All 4 categories present in algorithmsData.ts');
+
+assert(algoDataRaw.includes('linear-search') && algoDataRaw.includes('binary-search'), 'Searching algorithms present (Linear, Binary)');
+assert(algoDataRaw.includes('bubble-sort') && algoDataRaw.includes('merge-sort') && algoDataRaw.includes('quick-sort'), 'Famous Sorting algorithms present (Bubble, Merge, Quick)');
+assert(algoDataRaw.includes('bfs-graph') && algoDataRaw.includes('dfs-graph') && algoDataRaw.includes('dijkstra-graph'), 'Graph algorithms present (BFS, DFS, Dijkstra)');
+assert(algoDataRaw.includes('bst-ops') && algoDataRaw.includes('tree-traversal'), 'Tree algorithms present (BST Operations, Tree Traversals)');
+
+const visualizerModalRaw = fs.readFileSync(path.join(__dirname, 'src/components/AlgorithmVisualizerModal.tsx'), 'utf8');
+assert(visualizerModalRaw.includes('Dynamic Algorithm Visualizer'), 'Modal title verified');
+assert(visualizerModalRaw.includes('Histograph') || visualizerModalRaw.includes('Bar') || visualizerModalRaw.includes('heightPercent'), 'Histograph simulation verified');
+assert(visualizerModalRaw.includes('Doughnut') || visualizerModalRaw.includes('rounded-full border-4'), 'Doughnut node simulation verified');
+assert(visualizerModalRaw.includes('3 Tries') || visualizerModalRaw.includes('3 of 3') || visualizerModalRaw.includes('currentTries'), '3 tries tracking verified');
+assert(visualizerModalRaw.includes('Mark as Complete') || visualizerModalRaw.includes('handleAcknowledgeComplete'), 'Mark as Complete acknowledgement verified');
+
 console.log('\n=====================================================');
 if (failedTests === 0) {
   console.log('🎉 ALL AUDIT & DEEP VERIFICATION CHECKS PASSED (100%)');

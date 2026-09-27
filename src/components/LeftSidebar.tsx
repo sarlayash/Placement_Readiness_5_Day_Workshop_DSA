@@ -19,6 +19,7 @@ import {
   Brain,
   Smartphone,
   MessageSquare,
+  Sliders,
 } from 'lucide-react';
 import { HACKERRANK_COURSE_URL } from '../data/curriculum';
 import { SOLVED_PROGRAMS } from '../data/solvedPrograms';
@@ -43,6 +44,7 @@ interface LeftSidebarProps {
   onOpenSpinningWheel?: () => void;
   onOpenAptitude?: () => void;
   onOpenLevelZero?: () => void;
+  onOpenVisualizer?: () => void;
   onOpenPWAInstall?: () => void;
   onOpenFeedback?: () => void;
   feedbackStatus?: FeedbackWindowStatus;
@@ -76,6 +78,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   onOpenSpinningWheel,
   onOpenAptitude,
   onOpenLevelZero,
+  onOpenVisualizer,
   onOpenPWAInstall,
   onOpenFeedback,
   feedbackStatus,
@@ -187,6 +190,37 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
               {!isCollapsed && (
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-900/80 text-sky-200 font-mono font-bold border border-sky-700/60">
                   {progress.levelZeroCompletedIds?.length || 0}/10
+                </span>
+              )}
+            </button>
+          )}
+
+          {/* Algorithm Visualizer Lab */}
+          {onOpenVisualizer && (
+            <button
+              type="button"
+              onClick={onOpenVisualizer}
+              title={isCollapsed ? 'Algorithm Visualizer Lab' : undefined}
+              className={`w-full flex items-center rounded-xl border border-purple-500/50 bg-gradient-to-r from-purple-950/60 via-indigo-950/40 to-slate-900/60 hover:bg-purple-900/40 text-purple-200 text-xs font-bold transition-all cursor-pointer shadow-xs mb-2 ${
+                isCollapsed ? 'p-2 justify-center' : 'p-2.5 justify-between'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Sliders className="w-4 h-4 text-purple-400 shrink-0 animate-pulse" />
+                {!isCollapsed && (
+                  <div className="text-left">
+                    <div className="font-extrabold text-white flex items-center gap-1.5">
+                      <span className="rainbow-text">Algorithm Visualizer</span>
+                    </div>
+                    <div className="text-[10px] text-purple-300 font-normal">
+                      Searching • Sorting • Graphs • Trees
+                    </div>
+                  </div>
+                )}
+              </div>
+              {!isCollapsed && (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-900/80 text-purple-200 font-mono font-bold border border-purple-700/60">
+                  {progress.visualizationCompletedIds?.length || 0}/11
                 </span>
               )}
             </button>

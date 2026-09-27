@@ -16,6 +16,7 @@ import {
   Smartphone,
   WifiOff,
   MessageSquare,
+  Sliders,
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -33,6 +34,7 @@ interface HeaderProps {
   onOpenSpinningWheel?: () => void;
   onOpenAptitude?: () => void;
   onOpenLevelZero?: () => void;
+  onOpenVisualizer?: () => void;
   onPromptLogin?: () => void;
   onOpenPWAInstall?: () => void;
   isOnline?: boolean;
@@ -55,6 +57,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSpinningWheel,
   onOpenAptitude,
   onOpenLevelZero,
+  onOpenVisualizer,
   onPromptLogin,
   onOpenPWAInstall,
   isOnline = true,
@@ -189,6 +192,23 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="sm:hidden">L0</span>
               <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-sky-200/90 text-sky-900 font-mono">
                 {progress.levelZeroCompletedIds?.length || 0}/10
+              </span>
+            </button>
+          )}
+
+          {/* Algorithm Visualizer Lab Button */}
+          {onOpenVisualizer && (
+            <button
+              type="button"
+              onClick={onOpenVisualizer}
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border border-purple-300 bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 text-purple-900 text-xs font-bold transition-all shadow-xs cursor-pointer"
+              title="Interactive Algorithm Visualizer (Searching, Sorting, Graphs, Trees)"
+            >
+              <Sliders className="w-3.5 h-3.5 text-purple-600 animate-pulse" />
+              <span className="hidden sm:inline">Visualizer</span>
+              <span className="sm:hidden">Lab</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-purple-200/90 text-purple-900 font-mono">
+                {progress.visualizationCompletedIds?.length || 0}/11
               </span>
             </button>
           )}

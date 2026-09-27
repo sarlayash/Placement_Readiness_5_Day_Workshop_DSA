@@ -18,6 +18,7 @@ import {
   CheckCircle2,
   AlertCircle,
   MessageSquare,
+  Sliders,
 } from 'lucide-react';
 import { HACKERRANK_COURSE_URL } from '../data/curriculum';
 import { SOLVED_PROGRAMS } from '../data/solvedPrograms';
@@ -37,6 +38,7 @@ interface DayViewProps {
   onOpenIDE: (question: Question) => void;
   onToggleAcknowledgeProgram: (programId: string) => void;
   onOpenLevelZero?: () => void;
+  onOpenVisualizer?: () => void;
   onOpenFeedback?: () => void;
   feedbackStatus?: FeedbackWindowStatus;
 }
@@ -55,6 +57,7 @@ export const DayView: React.FC<DayViewProps> = ({
   onOpenIDE,
   onToggleAcknowledgeProgram,
   onOpenLevelZero,
+  onOpenVisualizer,
   onOpenFeedback,
   feedbackStatus,
 }) => {
@@ -298,6 +301,21 @@ export const DayView: React.FC<DayViewProps> = ({
               <span>LEVEL 0 (10 Solved)</span>
               <span className="px-1.5 py-0.2 rounded-md bg-sky-200/90 text-sky-900 text-[10px] font-mono font-bold">
                 {progress.levelZeroCompletedIds?.length || 0}/10
+              </span>
+            </button>
+          )}
+
+          {onOpenVisualizer && (
+            <button
+              type="button"
+              onClick={onOpenVisualizer}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs md:text-sm font-bold transition-all cursor-pointer bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200 shadow-2xs"
+              title="Interactive Algorithm Visualizer Lab (Searching, Sorting, Graphs, Trees)"
+            >
+              <Sliders className="w-4 h-4 text-purple-600 animate-pulse" />
+              <span>Algorithm Visualizer</span>
+              <span className="px-1.5 py-0.2 rounded-md bg-purple-200/90 text-purple-900 text-[10px] font-mono font-bold">
+                {progress.visualizationCompletedIds?.length || 0}/11
               </span>
             </button>
           )}
