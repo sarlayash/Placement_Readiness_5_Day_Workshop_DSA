@@ -39,6 +39,9 @@ import { FeedbackReminderBanner } from './components/FeedbackReminderBanner';
 import { DailyFeedbackModal } from './components/DailyFeedbackModal';
 import { LevelZeroModal } from './components/LevelZeroModal';
 import { AlgorithmVisualizerModal } from './components/AlgorithmVisualizerModal';
+import { AdminLoginModal } from './components/AdminLoginModal';
+import { AdminDashboardModal } from './components/AdminDashboardModal';
+import { isAdminAuthenticated, setAdminAuthenticated, syncCurrentUserToRoster } from './utils/adminService';
 import { Lock, Unlock, Clock, AlertCircle, Zap, Brain, LogIn, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -46,6 +49,11 @@ export function App() {
   // Authentication State (Strictly Google Login Only)
   const [googleUser, setGoogleUser] = useState<GoogleUser | null>(() => loadGoogleUser());
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
+
+  // Admin Portal State
+  const [showAdminLogin, setShowAdminLogin] = useState<boolean>(false);
+  const [showAdminDashboard, setShowAdminDashboard] = useState<boolean>(false);
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(() => isAdminAuthenticated());
 
   // Initial Onboarding: BEGIN WITH SPINNING WHEEL (for first-time / non-authenticated visitors)
   const [showSpinningWheel, setShowSpinningWheel] = useState<boolean>(() => !loadGoogleUser());
@@ -110,14 +118,29 @@ export function App() {
     return () => clearInterval(timer);
   }, [simulatedDate, demoBypass]);
 
-  // Persist user and progress updates
+  // Persist user and progress updates & synchronize to Admin Roster
   useEffect(() => {
     saveGoogleUser(googleUser);
-  }, [googleUser]);
+    if (googleUser) {
+      syncCurrentUserToRoster(googleUser, progress);
+    }
+  }, [googleUser, progress]);
 
   useEffect(() => {
     saveUserProgress(progress);
-  }, [progress]);
+    if (googleUser) {
+      syncCurrentUserToRoster(googleUser, progress);
+    }
+  }, [progress, googleUser]);
+
+  // Handler to open Admin Portal (Dashboard if logged in, else Login prompt)
+  const handleOpenAdmin = () => {
+    if (isAdminLoggedIn) {
+      setShowAdminDashboard(true);
+    } else {
+      setShowAdminLogin(true);
+    }
+  };
 
   // Handle Google Sign-in
   const handleGoogleSignIn = (user: GoogleUser) => {
@@ -398,6 +421,8 @@ export function App() {
         isOnline={isOnlineState}
         feedbackStatus={feedbackStatus}
         onOpenFeedback={() => setShowFeedbackModal(true)}
+        onOpenAdmin={handleOpenAdmin}
+        isAdmin={isAdminLoggedIn}
       />
 
       {/* 4. MAIN WORKSPACE CONTAINER WITH COLLAPSIBLE NAVY BLUE LEFT SIDEBAR */}
@@ -438,6 +463,8 @@ export function App() {
           onOpenPWAInstall={() => setShowPWAInstallModal(true)}
           onOpenFeedback={() => setShowFeedbackModal(true)}
           feedbackStatus={feedbackStatus}
+          onOpenAdmin={handleOpenAdmin}
+          isAdmin={isAdminLoggedIn}
         />
 
         {/* Center Main Content Area */}
@@ -704,6 +731,42 @@ export function App() {
         triesMap={progress.visualizationTries || {}}
         onToggleComplete={handleToggleVisualizationComplete}
         onRecordTry={handleRecordVisualizationTry}
+      />
+
+      {/* Floating Admin Lock Icon on Main Page */}
+      <button
+        type="button"
+        onClick={handleOpenAdmin}
+        className={`fixed bottom-5 right-5 z-40 p-3 rounded-full shadow-2xl border transition-all duration-300 cursor-pointer group ${
+          isAdminLoggedIn
+            ? 'bg-amber-500 border-amber-300 text-slate-950 hover:bg-amber-400 shadow-amber-500/30'
+            : 'bg-[#091126] border-amber-500/60 text-amber-400 hover:bg-[#0f1b3d] hover:border-amber-400 hover:shadow-amber-500/20 shadow-black/70'
+        }`}
+        title={isAdminLoggedIn ? 'Kapil Super Admin Portal (Active)' : 'Admin Login (Kapil)'}
+      >
+        <Lock className="w-5 h-5 group-hover:scale-110 transition-transform" />
+      </button>
+
+      {/* Kapil's Admin Authentication Modal */}
+      <AdminLoginModal
+        isOpen={showAdminLogin}
+        onClose={() => setShowAdminLogin(false)}
+        onLoginSuccess={() => {
+          setIsAdminLoggedIn(true);
+          setShowAdminLogin(false);
+          setShowAdminDashboard(true);
+        }}
+      />
+
+      {/* Kapil's Admin Dashboard (Learner Roster, CSV Reports, Badges, Certs, Assignments, Quizzes) */}
+      <AdminDashboardModal
+        isOpen={showAdminDashboard}
+        onClose={() => setShowAdminDashboard(false)}
+        onLogout={() => {
+          setIsAdminLoggedIn(false);
+          setAdminAuthenticated(false);
+          setShowAdminDashboard(false);
+        }}
       />
     </div>
   );

@@ -189,3 +189,68 @@ export interface AptitudeMCQ {
   };
 }
 
+export interface StudentRecord {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string;
+  rollNo?: string;
+  loginProvider: string;
+  lastActive: string;
+  registeredAt: string;
+  progress: UserProgress;
+  customBadges?: string[];
+  customCertificates?: string[];
+}
+
+export interface AdminCustomBadge {
+  id: string;
+  title: string;
+  subtitle: string;
+  iconName: string;
+  color: string;
+  criteria: string;
+  day: number | string;
+  issuedAt: string;
+  recipientStudentIds: string[]; // empty means all enrolled students
+}
+
+export interface AdminCustomCertificate {
+  id: string;
+  studentId: string;
+  studentName: string;
+  studentEmail: string;
+  certificateTitle: string;
+  grade: 'Outstanding' | 'A+' | 'A' | 'Honours';
+  issuedAt: string;
+  issuedBy: string;
+  verificationCode: string;
+  remarks: string;
+}
+
+export interface AdminCustomAssignment {
+  id: string;
+  title: string;
+  day: number;
+  difficulty: 'Level 0' | 'Easy' | 'Medium' | 'Hard';
+  topicTag: string;
+  description: string;
+  sampleInput: string;
+  sampleOutput: string;
+  kapilIntuition: string;
+  timeComplexity: string;
+  spaceComplexity: string;
+  createdAt: string;
+}
+
+export interface AdminCustomQuiz {
+  id: string;
+  category: 'Day 1' | 'Day 2' | 'Day 3' | 'Day 4' | 'Day 5' | 'Aptitude' | 'Spinning Wheel' | 'Final Exam';
+  question: string;
+  options: [string, string, string, string];
+  correctAnswer: number; // 0-3
+  explanation: string;
+  marks: number;
+  createdAt: string;
+}
+

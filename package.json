@@ -11,6 +11,7 @@
     "lint": "oxlint",
     "test": "node test-journey.js",
     "test:audit": "node test-all-modules.js",
+    "test:admin": "node test-admin-portal.js",
     "preview": "vite preview"
   },
   "dependencies": {

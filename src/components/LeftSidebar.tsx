@@ -48,6 +48,8 @@ interface LeftSidebarProps {
   onOpenPWAInstall?: () => void;
   onOpenFeedback?: () => void;
   feedbackStatus?: FeedbackWindowStatus;
+  onOpenAdmin?: () => void;
+  isAdmin?: boolean;
 }
 
 const DAY_METADATA = [
@@ -82,6 +84,8 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   onOpenPWAInstall,
   onOpenFeedback,
   feedbackStatus,
+  onOpenAdmin,
+  isAdmin = false,
 }) => {
   const isDraggingRef = useRef(false);
 
@@ -568,6 +572,32 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
                 {!isCollapsed && (
                   <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-900 text-emerald-200 font-mono font-bold">
                     PWA
+                  </span>
+                )}
+              </button>
+            )}
+
+            {/* Admin Portal Lock Button */}
+            {onOpenAdmin && (
+              <button
+                type="button"
+                onClick={onOpenAdmin}
+                title={isCollapsed ? (isAdmin ? 'Kapil Super Admin (Active)' : 'Kapil Admin Portal') : undefined}
+                className={`w-full flex items-center rounded-xl border transition-colors cursor-pointer ${
+                  isAdmin
+                    ? 'border-amber-400 bg-amber-500 text-slate-950 font-bold shadow-md'
+                    : 'border-amber-500/40 bg-amber-950/20 hover:bg-amber-900/40 text-amber-300 font-semibold'
+                } ${
+                  isCollapsed ? 'p-2 justify-center' : 'p-2.5 justify-between text-xs'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Lock className={`w-4 h-4 shrink-0 ${isAdmin ? 'text-slate-950' : 'text-amber-400'}`} />
+                  {!isCollapsed && <span>{isAdmin ? 'Admin (Active)' : 'Admin Portal'}</span>}
+                </div>
+                {!isCollapsed && (
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold ${isAdmin ? 'bg-slate-950 text-amber-400' : 'bg-amber-500 text-slate-950'}`}>
+                    Kapil
                   </span>
                 )}
               </button>
