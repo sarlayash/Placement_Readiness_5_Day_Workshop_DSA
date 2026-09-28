@@ -6,6 +6,7 @@ import {
   AdminCustomCertificate,
   AdminCustomAssignment,
   AdminCustomQuiz,
+  DayLockStatus,
 } from '../types';
 
 const ADMIN_USERNAME = 'KAPILADMIN';
@@ -17,6 +18,9 @@ const STORAGE_CUSTOM_BADGES = 'kapil_prp_admin_badges';
 const STORAGE_CUSTOM_CERTS = 'kapil_prp_admin_certificates';
 const STORAGE_CUSTOM_ASSIGNMENTS = 'kapil_prp_admin_assignments';
 const STORAGE_CUSTOM_QUIZZES = 'kapil_prp_admin_quizzes';
+export const STORAGE_GLOBAL_DAY_LOCKS = 'kapil_prp_admin_global_day_locks';
+export const STORAGE_STUDENT_DAY_LOCKS = 'kapil_prp_admin_student_day_locks';
+
 
 // Verify Admin Credentials (case-insensitive username, exact password)
 export function verifyAdminCredentials(user: string, pass: string): boolean {
@@ -76,7 +80,9 @@ export function getInitialRealStudents(): StudentRecord[] {
   try {
     const rawUser = localStorage.getItem('kapil_prp_google_user');
     if (rawUser) currentGoogleUser = JSON.parse(rawUser);
-    const rawProg = localStorage.getItem('kapil_prp_progress');
+    const rawProg =
+      localStorage.getItem('kapil_prp_user_progress') ||
+      localStorage.getItem('kapil_prp_progress');
     if (rawProg) currentUserProgress = JSON.parse(rawProg);
   } catch {
     // ignore
@@ -186,7 +192,9 @@ export function getAllStudents(): StudentRecord[] {
     // Attach active logged-in Google learner's live progress
     try {
       const rawUser = localStorage.getItem('kapil_prp_google_user');
-      const rawProg = localStorage.getItem('kapil_prp_progress');
+      const rawProg =
+        localStorage.getItem('kapil_prp_user_progress') ||
+        localStorage.getItem('kapil_prp_progress');
       if (rawUser && rawProg) {
         const u: GoogleUser = JSON.parse(rawUser);
         const p: UserProgress = JSON.parse(rawProg);
@@ -334,13 +342,22 @@ export function updateStudentRecord(studentId: string, updater: (prev: StudentRe
 
 // Calculate Day Completion percentage for student
 export function calculateStudentDayCompletion(progress: UserProgress, day: number): number {
+  if (!progress) return 0;
   let score = 0;
-  if (progress.dayPreAssessmentPassed[day]) score += 20;
-  // Solved programs (6 total per day, up to 40%)
-  const dayPrograms = (progress.acknowledgedSolvedProgramIds || []).filter((id) => id.startsWith(`D${day}-`));
-  score += Math.min(40, Math.round((dayPrograms.length / 6) * 40));
-  if (progress.dayPostAssessmentPassed[day]) score += 25;
-  if (progress.badgesUnlocked[day]) score += 15;
+  if (progress.dayPreAssessmentPassed?.[day]) score += 20;
+
+  // Solved masterclass programs (6 total per day, up to 35%)
+  const dayAck = (progress.acknowledgedSolvedProgramIds || []).filter((id) =>
+    id.toLowerCase().startsWith(`d${day}-`)
+  ).length;
+  score += Math.min(35, Math.round((dayAck / 6) * 35));
+
+  // Post-Assessment passed (25%)
+  if (progress.dayPostAssessmentPassed?.[day]) score += 25;
+
+  // Daily Badge Unlocked (20%)
+  if (progress.badgesUnlocked?.[day]) score += 20;
+
   return Math.min(100, score);
 }
 
@@ -383,7 +400,9 @@ export function generateDailyCSV(day: number, students: StudentRecord[]): string
   const rows = students.map((s) => {
     const preScore = s.progress.dayPreAssessmentScores?.[day] ?? 0;
     const prePassed = s.progress.dayPreAssessmentPassed?.[day] ? 'Passed' : 'Pending';
-    const dayAck = (s.progress.acknowledgedSolvedProgramIds || []).filter((id) => id.startsWith(`D${day}-`)).length;
+    const dayAck = (s.progress.acknowledgedSolvedProgramIds || []).filter((id) =>
+      id.toLowerCase().startsWith(`d${day}-`)
+    ).length;
     const postScore = s.progress.dayPostAssessmentScores?.[day] ?? 0;
     const postPassed = s.progress.dayPostAssessmentPassed?.[day] ? 'Passed' : 'Pending';
     const badgeEarned = s.progress.badgesUnlocked?.[day] ? 'UNLOCKED' : 'LOCKED';
@@ -599,3 +618,278 @@ export function addAdminQuiz(quiz: AdminCustomQuiz): void {
     console.error('Failed to save admin quiz', err);
   }
 }
+
+// ==========================================
+// ADMIN DAY LOCK & ACCESS CONTROLS
+// ==========================================
+
+export function getAdminGlobalDayStatus(day: number): DayLockStatus {
+  try {
+    const raw = localStorage.getItem(STORAGE_GLOBAL_DAY_LOCKS);
+    if (!raw) return 'default';
+    const map = JSON.parse(raw);
+    return map[day] || 'default';
+  } catch {
+    return 'default';
+  }
+}
+
+export function getAllGlobalDayStatuses(): Record<number, DayLockStatus> {
+  const result: Record<number, DayLockStatus> = { 1: 'default', 2: 'default', 3: 'default', 4: 'default', 5: 'default' };
+  try {
+    const raw = localStorage.getItem(STORAGE_GLOBAL_DAY_LOCKS);
+    if (raw) {
+      const map = JSON.parse(raw);
+      for (let d = 1; d <= 5; d++) {
+        if (map[d]) result[d] = map[d];
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return result;
+}
+
+export function setAdminGlobalDayStatus(day: number, status: DayLockStatus): void {
+  try {
+    const current = getAllGlobalDayStatuses();
+    current[day] = status;
+    localStorage.setItem(STORAGE_GLOBAL_DAY_LOCKS, JSON.stringify(current));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('kapil_day_locks_updated', {
+          detail: { day, status, scope: 'global' },
+        })
+      );
+    }
+  } catch (err) {
+    console.error('Failed to set global day status', err);
+  }
+}
+
+export function unlockAllDaysGlobally(): void {
+  try {
+    const allUnlocked: Record<number, DayLockStatus> = {
+      1: 'unlocked',
+      2: 'unlocked',
+      3: 'unlocked',
+      4: 'unlocked',
+      5: 'unlocked',
+    };
+    localStorage.setItem(STORAGE_GLOBAL_DAY_LOCKS, JSON.stringify(allUnlocked));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('kapil_day_locks_updated', {
+          detail: { all: true, status: 'unlocked', scope: 'global' },
+        })
+      );
+    }
+  } catch (err) {
+    console.error('Failed to unlock all days globally', err);
+  }
+}
+
+export function relockAllDaysToDefault(): void {
+  try {
+    localStorage.removeItem(STORAGE_GLOBAL_DAY_LOCKS);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('kapil_day_locks_updated', {
+          detail: { all: true, status: 'default', scope: 'global' },
+        })
+      );
+    }
+  } catch (err) {
+    console.error('Failed to reset global day locks', err);
+  }
+}
+
+export function getAdminStudentDayStatus(studentIdOrEmail: string, day: number): DayLockStatus {
+  if (!studentIdOrEmail) return 'default';
+  try {
+    const raw = localStorage.getItem(STORAGE_STUDENT_DAY_LOCKS);
+    if (!raw) return 'default';
+    const map = JSON.parse(raw);
+    const key = Object.keys(map).find(
+      (k) => k.toLowerCase() === studentIdOrEmail.toLowerCase()
+    );
+    if (key && map[key] && map[key][day]) {
+      return map[key][day];
+    }
+    return 'default';
+  } catch {
+    return 'default';
+  }
+}
+
+export function getAllStudentDayStatuses(studentIdOrEmail: string): Record<number, DayLockStatus> {
+  const result: Record<number, DayLockStatus> = { 1: 'default', 2: 'default', 3: 'default', 4: 'default', 5: 'default' };
+  if (!studentIdOrEmail) return result;
+  try {
+    const raw = localStorage.getItem(STORAGE_STUDENT_DAY_LOCKS);
+    if (raw) {
+      const map = JSON.parse(raw);
+      const key = Object.keys(map).find(
+        (k) => k.toLowerCase() === studentIdOrEmail.toLowerCase()
+      );
+      if (key && map[key]) {
+        for (let d = 1; d <= 5; d++) {
+          if (map[key][d]) result[d] = map[key][d];
+        }
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return result;
+}
+
+export function setAdminStudentDayStatus(studentId: string, day: number, status: DayLockStatus): void {
+  try {
+    let map: Record<string, Record<number, DayLockStatus>> = {};
+    const raw = localStorage.getItem(STORAGE_STUDENT_DAY_LOCKS);
+    if (raw) {
+      try {
+        map = JSON.parse(raw);
+      } catch {
+        map = {};
+      }
+    }
+    if (!map[studentId]) {
+      map[studentId] = { 1: 'default', 2: 'default', 3: 'default', 4: 'default', 5: 'default' };
+    }
+    map[studentId][day] = status;
+    localStorage.setItem(STORAGE_STUDENT_DAY_LOCKS, JSON.stringify(map));
+
+    updateStudentRecord(studentId, (prev) => ({
+      ...prev,
+      dayOverrides: {
+        ...(prev.dayOverrides || {}),
+        [day]: status,
+      },
+    }));
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('kapil_day_locks_updated', {
+          detail: { studentId, day, status, scope: 'student' },
+        })
+      );
+    }
+  } catch (err) {
+    console.error('Failed to set student day status', err);
+  }
+}
+
+export function unlockAllDaysForStudent(studentId: string): void {
+  for (let d = 1; d <= 5; d++) {
+    setAdminStudentDayStatus(studentId, d, 'unlocked');
+  }
+}
+
+export function relockAllDaysForStudent(studentId: string): void {
+  for (let d = 1; d <= 5; d++) {
+    setAdminStudentDayStatus(studentId, d, 'locked');
+  }
+}
+
+export function resetStudentDayLocks(studentId: string): void {
+  try {
+    const raw = localStorage.getItem(STORAGE_STUDENT_DAY_LOCKS);
+    if (raw) {
+      const map = JSON.parse(raw);
+      delete map[studentId];
+      delete map[studentId.toLowerCase()];
+      localStorage.setItem(STORAGE_STUDENT_DAY_LOCKS, JSON.stringify(map));
+    }
+    updateStudentRecord(studentId, (prev) => {
+      const updated = { ...prev };
+      delete updated.dayOverrides;
+      return updated;
+    });
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('kapil_day_locks_updated', {
+          detail: { studentId, status: 'default', scope: 'student' },
+        })
+      );
+    }
+  } catch (err) {
+    console.error('Failed to reset student day locks', err);
+  }
+}
+
+// Mark student day 100% complete (for verified in-person learners)
+export function markStudentDayComplete(studentId: string, day: number): void {
+  updateStudentRecord(studentId, (prev) => {
+    const p: UserProgress = {
+      ...prev.progress,
+      dayPreAssessmentPassed: { ...(prev.progress.dayPreAssessmentPassed || {}), [day]: true },
+      dayPreAssessmentScores: { ...(prev.progress.dayPreAssessmentScores || {}), [day]: 5 },
+      dayPostAssessmentPassed: { ...(prev.progress.dayPostAssessmentPassed || {}), [day]: true },
+      dayPostAssessmentScores: { ...(prev.progress.dayPostAssessmentScores || {}), [day]: 100 },
+      badgesUnlocked: { ...(prev.progress.badgesUnlocked || {}), [day]: true },
+    };
+
+    const dayAck = [
+      `d${day}-e1`, `d${day}-e2`,
+      `d${day}-m1`, `d${day}-m2`,
+      `d${day}-h1`, `d${day}-h2`
+    ];
+    const currentAck = new Set(p.acknowledgedSolvedProgramIds || []);
+    dayAck.forEach((id) => currentAck.add(id));
+    p.acknowledgedSolvedProgramIds = Array.from(currentAck);
+
+    return {
+      ...prev,
+      lastActive: new Date().toISOString(),
+      progress: p,
+    };
+  });
+}
+
+// Reset student progress to fresh state
+export function resetStudentProgress(studentId: string): void {
+  updateStudentRecord(studentId, (prev) => ({
+    ...prev,
+    progress: createEmptyUserProgress(),
+    lastActive: new Date().toISOString(),
+  }));
+}
+
+// Export Roster Snapshot JSON (for cross-device sharing or backup)
+export function exportRosterSnapshotJSON(): string {
+  const students = getAllStudents();
+  const globalLocks = getAllGlobalDayStatuses();
+  return JSON.stringify(
+    {
+      version: '1.0',
+      exportedAt: new Date().toISOString(),
+      globalLocks,
+      students,
+    },
+    null,
+    2
+  );
+}
+
+// Import Roster Snapshot JSON
+export function importRosterSnapshotJSON(jsonStr: string): boolean {
+  try {
+    const data = JSON.parse(jsonStr);
+    if (data && Array.isArray(data.students) && data.students.length > 0) {
+      localStorage.setItem(STORAGE_ROSTER, JSON.stringify(data.students));
+      if (data.globalLocks) {
+        localStorage.setItem(STORAGE_GLOBAL_DAY_LOCKS, JSON.stringify(data.globalLocks));
+      }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('kapil_day_locks_updated', { detail: { all: true } }));
+      }
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+

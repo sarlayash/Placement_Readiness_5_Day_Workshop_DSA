@@ -98,6 +98,14 @@ export function App() {
   const [showLevelZeroModal, setShowLevelZeroModal] = useState<boolean>(false);
   const [showVisualizerModal, setShowVisualizerModal] = useState<boolean>(false);
 
+  // Re-render when Admin updates Day locks
+  const [, setLockVersion] = useState<number>(0);
+  useEffect(() => {
+    const handler = () => setLockVersion((v) => v + 1);
+    window.addEventListener('kapil_day_locks_updated', handler);
+    return () => window.removeEventListener('kapil_day_locks_updated', handler);
+  }, []);
+
   // Online / offline listeners
   useEffect(() => {
     const handleOnline = () => setIsOnlineState(true);
@@ -317,7 +325,13 @@ export function App() {
   const dayTopics = TOPICS.filter((t) => t.day === currentDay);
 
   // Check if current day is unlocked (Strict: Pre-test, Questions, 6 Solved Programs, Post-test & Badge)
-  const dayLockState = isDayUnlockedStrict(currentDay, progress, istStatus, demoBypass);
+  const dayLockState = isDayUnlockedStrict(
+    currentDay,
+    progress,
+    istStatus,
+    demoBypass,
+    googleUser?.id || googleUser?.email
+  );
 
   // Calculate Daily Feedback Window Status (2:30 PM - 3:30 PM IST with 30m, 10m, 5m reminders)
   const feedbackStatus = calculateFeedbackStatus(currentDay, progress, istStatus, demoBypass);
@@ -494,6 +508,7 @@ export function App() {
           feedbackStatus={feedbackStatus}
           onOpenAdmin={handleOpenAdmin}
           isAdmin={isAdminLoggedIn}
+          userId={googleUser?.id || googleUser?.email}
         />
 
         {/* Center Main Content Area */}
@@ -615,6 +630,7 @@ export function App() {
                 feedbackStatus={feedbackStatus}
                 onOpenAdmin={handleOpenAdmin}
                 isAdmin={isAdminLoggedIn}
+                userId={googleUser?.id || googleUser?.email}
               />
             )}
           </div>

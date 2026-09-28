@@ -5,6 +5,7 @@ import {
   AdminCustomCertificate,
   AdminCustomAssignment,
   AdminCustomQuiz,
+  DayLockStatus,
 } from '../types';
 import {
   getAllStudents,
@@ -24,7 +25,24 @@ import {
   setAdminAuthenticated,
   calculateStudentDayCompletion,
   calculateStudentOverallCompletion,
+  getAdminGlobalDayStatus,
+  getAllGlobalDayStatuses,
+  setAdminGlobalDayStatus,
+  unlockAllDaysGlobally,
+  relockAllDaysToDefault,
+  getAdminStudentDayStatus,
+  getAllStudentDayStatuses,
+  setAdminStudentDayStatus,
+  unlockAllDaysForStudent,
+  relockAllDaysForStudent,
+  resetStudentDayLocks,
+  markStudentDayComplete,
+  resetStudentProgress,
+  exportRosterSnapshotJSON,
+  importRosterSnapshotJSON,
 } from '../utils/adminService';
+import { TOPICS } from '../data/curriculum';
+import { SOLVED_PROGRAMS } from '../data/solvedPrograms';
 import {
   ShieldAlert,
   Users,
@@ -48,6 +66,15 @@ import {
   ShieldCheck,
   Trophy,
   RefreshCw,
+  Lock,
+  Unlock,
+  Key,
+  FileJson,
+  Upload,
+  AlertTriangle,
+  Layers,
+  ChevronRight,
+  RotateCcw,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -57,7 +84,7 @@ interface AdminDashboardModalProps {
   onLogout: () => void;
 }
 
-type TabType = 'roster' | 'reports' | 'badges' | 'certificates' | 'assignments' | 'quizzes';
+type TabType = 'roster' | 'daylocks' | 'reports' | 'badges' | 'certificates' | 'assignments' | 'quizzes';
 
 export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   isOpen,
@@ -113,6 +140,16 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   const [quizMarks, setQuizMarks] = useState(10);
   const [isSyncing, setIsSyncing] = useState(false);
 
+  // Day Locks State
+  const [globalDayLocks, setGlobalDayLocks] = useState<Record<number, DayLockStatus>>(() =>
+    getAllGlobalDayStatuses()
+  );
+  // Comprehensive Student Completion Inspector Modal State
+  const [inspectingStudent, setInspectingStudent] = useState<StudentRecord | null>(null);
+  // JSON Snapshot Import Modal State
+  const [showImportModal, setShowImportModal] = useState<boolean>(false);
+  const [importJsonText, setImportJsonText] = useState<string>('');
+
   const [notification, setNotification] = useState<string | null>(null);
 
   useEffect(() => {
@@ -124,6 +161,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   const loadData = async () => {
     const list = getAllStudents();
     setStudents(list);
+    setGlobalDayLocks(getAllGlobalDayStatuses());
     setCustomBadges(getAdminCustomBadges());
     setCustomCertificates(getAdminCustomCertificates());
     setCustomAssignments(getAdminAssignments());
@@ -141,6 +179,137 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
       updateReportPreview(selectedReportDay, liveList);
     } catch {
       // fallback to local
+    }
+  };
+
+  const handleToggleGlobalDayLock = (day: number) => {
+    const current = globalDayLocks[day] || 'default';
+    let next: DayLockStatus = 'default';
+    if (current === 'default') next = 'unlocked';
+    else if (current === 'unlocked') next = 'locked';
+    else next = 'default';
+
+    setAdminGlobalDayStatus(day, next);
+    setGlobalDayLocks((prev) => ({ ...prev, [day]: next }));
+    const label =
+      next === 'unlocked'
+        ? `Day ${day} Force Unlocked for All Learners!`
+        : next === 'locked'
+        ? `Day ${day} Relocked for All Learners!`
+        : `Day ${day} Reset to Default Strict Progression`;
+    showToast(label);
+  };
+
+  const handleUnlockAllGlobal = () => {
+    unlockAllDaysGlobally();
+    setGlobalDayLocks(getAllGlobalDayStatuses());
+    showToast('All 5 Days Force Unlocked for All Learners!');
+  };
+
+  const handleRelockAllGlobal = () => {
+    relockAllDaysToDefault();
+    setGlobalDayLocks(getAllGlobalDayStatuses());
+    showToast('All Days Restored to Default Strict Progression Locks');
+  };
+
+  const handleToggleStudentDayLock = (studentId: string, day: number) => {
+    const current = getAdminStudentDayStatus(studentId, day);
+    let next: DayLockStatus = 'default';
+    if (current === 'default') next = 'unlocked';
+    else if (current === 'unlocked') next = 'locked';
+    else next = 'default';
+
+    setAdminStudentDayStatus(studentId, day, next);
+    const updated = getAllStudents();
+    setStudents(updated);
+    if (inspectingStudent && inspectingStudent.id === studentId) {
+      setInspectingStudent(updated.find((s) => s.id === studentId) || null);
+    }
+    const label =
+      next === 'unlocked'
+        ? `Day ${day} Unlocked for student!`
+        : next === 'locked'
+        ? `Day ${day} Relocked for student!`
+        : `Day ${day} Reset to Default for student`;
+    showToast(label);
+  };
+
+  const handleUnlockAllForStudent = (studentId: string) => {
+    unlockAllDaysForStudent(studentId);
+    const updated = getAllStudents();
+    setStudents(updated);
+    if (inspectingStudent && inspectingStudent.id === studentId) {
+      setInspectingStudent(updated.find((s) => s.id === studentId) || null);
+    }
+    showToast('All 5 Days Unlocked for this learner!');
+  };
+
+  const handleRelockAllForStudent = (studentId: string) => {
+    relockAllDaysForStudent(studentId);
+    const updated = getAllStudents();
+    setStudents(updated);
+    if (inspectingStudent && inspectingStudent.id === studentId) {
+      setInspectingStudent(updated.find((s) => s.id === studentId) || null);
+    }
+    showToast('All 5 Days Relocked for this learner!');
+  };
+
+  const handleResetStudentDayLocks = (studentId: string) => {
+    resetStudentDayLocks(studentId);
+    const updated = getAllStudents();
+    setStudents(updated);
+    if (inspectingStudent && inspectingStudent.id === studentId) {
+      setInspectingStudent(updated.find((s) => s.id === studentId) || null);
+    }
+    showToast('Day locks reset to default for this learner');
+  };
+
+  const handleMarkStudentDayComplete = (studentId: string, day: number) => {
+    markStudentDayComplete(studentId, day);
+    const updated = getAllStudents();
+    setStudents(updated);
+    if (inspectingStudent && inspectingStudent.id === studentId) {
+      setInspectingStudent(updated.find((s) => s.id === studentId) || null);
+    }
+    showToast(`Day ${day} marked 100% completed for learner!`);
+  };
+
+  const handleResetStudentProgress = (studentId: string) => {
+    if (window.confirm('Are you sure you want to reset this student progress?')) {
+      resetStudentProgress(studentId);
+      const updated = getAllStudents();
+      setStudents(updated);
+      if (inspectingStudent && inspectingStudent.id === studentId) {
+        setInspectingStudent(updated.find((s) => s.id === studentId) || null);
+      }
+      showToast('Student progress reset to initial empty state.');
+    }
+  };
+
+  const handleExportJSON = () => {
+    const json = exportRosterSnapshotJSON();
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `kapil_placement_roster_snapshot_${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Roster & Day Locks Snapshot Exported!');
+  };
+
+  const handleImportJSON = () => {
+    if (!importJsonText.trim()) return;
+    const ok = importRosterSnapshotJSON(importJsonText);
+    if (ok) {
+      setShowImportModal(false);
+      setImportJsonText('');
+      loadData();
+      showToast('Learner Roster Snapshot Imported Successfully!');
+    } else {
+      showToast('Invalid JSON file format. Please check and retry.');
     }
   };
 
@@ -455,6 +624,19 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
 
           <button
             type="button"
+            onClick={() => setActiveTab('daylocks')}
+            className={`flex items-center gap-1.5 px-3.5 py-2.5 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'daylocks'
+                ? 'border-amber-400 text-amber-300 bg-amber-500/10'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Key className="w-4 h-4 text-amber-400" />
+            <span>Day Unlock & Relock Controls</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveTab('reports')}
             className={`flex items-center gap-1.5 px-3.5 py-2.5 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'reports'
@@ -537,6 +719,114 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
           {/* TAB 1: LEARNER ROSTER */}
           {activeTab === 'roster' && (
             <div className="space-y-4">
+              {/* Master Day Access & Lock Management Panel */}
+              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-[#0d1633] via-[#091129] to-[#0d1633] border border-amber-500/40 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300">
+                      <Key className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="font-extrabold text-white text-xs flex items-center gap-1.5">
+                        <span>Master Day Access & Lock Controller</span>
+                        <span className="text-[10px] px-2 py-0.2 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                          Admin Kapil
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400">
+                        Unlock or relock specific days globally for all learners on this webapp, bypassing time or prerequisite gates.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                    <button
+                      type="button"
+                      onClick={handleUnlockAllGlobal}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[11px] transition-all cursor-pointer shadow-xs"
+                      title="Force unlock Day 1, 2, 3, 4, 5 for all learners"
+                    >
+                      <Unlock className="w-3.5 h-3.5" />
+                      <span>⚡ Unlock All Days</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleRelockAllGlobal}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[11px] transition-all cursor-pointer border border-slate-700"
+                      title="Restore default strict progression: Day N requires Day N-1 completion"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Reset to Default</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleExportJSON}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-indigo-950 hover:bg-indigo-900 border border-indigo-700/50 text-indigo-200 text-[11px] font-bold cursor-pointer"
+                      title="Export full roster and progress snapshot JSON"
+                    >
+                      <FileJson className="w-3.5 h-3.5 text-indigo-400" />
+                      <span>Export JSON</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowImportModal(true)}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-indigo-950 hover:bg-indigo-900 border border-indigo-700/50 text-indigo-200 text-[11px] font-bold cursor-pointer"
+                      title="Import roster snapshot JSON from another device"
+                    >
+                      <Upload className="w-3.5 h-3.5 text-indigo-400" />
+                      <span>Import JSON</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Day Badges Matrix */}
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-1">
+                  {[1, 2, 3, 4, 5].map((d) => {
+                    const status = globalDayLocks[d] || 'default';
+                    const isUnlocked = status === 'unlocked';
+                    const isLocked = status === 'locked';
+
+                    return (
+                      <div
+                        key={d}
+                        onClick={() => handleToggleGlobalDayLock(d)}
+                        className={`p-2.5 rounded-xl border transition-all cursor-pointer select-none flex flex-col justify-between gap-1.5 ${
+                          isUnlocked
+                            ? 'bg-amber-950/40 border-amber-500/70 text-amber-200 shadow-xs ring-1 ring-amber-500/30'
+                            : isLocked
+                            ? 'bg-rose-950/40 border-rose-500/70 text-rose-200 shadow-xs ring-1 ring-rose-500/30'
+                            : 'bg-[#060a17] border-indigo-900/60 text-slate-300 hover:border-slate-500'
+                        }`}
+                        title="Click to cycle: Default -> Force Unlocked -> Force Relocked -> Default"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-extrabold text-xs">Day {d}</span>
+                          {isUnlocked ? (
+                            <Unlock className="w-3.5 h-3.5 text-amber-400" />
+                          ) : isLocked ? (
+                            <Lock className="w-3.5 h-3.5 text-rose-400" />
+                          ) : (
+                            <span className="text-[10px] text-slate-500">Strict</span>
+                          )}
+                        </div>
+                        <div className="text-[10px] font-mono">
+                          {isUnlocked ? (
+                            <span className="text-amber-400 font-bold">⚡ Unlocked</span>
+                          ) : isLocked ? (
+                            <span className="text-rose-400 font-bold">🔒 Relocked</span>
+                          ) : (
+                            <span className="text-slate-400">Default Rule</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
                 <div className="relative w-full sm:w-80">
                   <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -640,20 +930,28 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                                 <div className="flex items-center gap-1">
                                   {[1, 2, 3, 4, 5].map((d) => {
                                     const pct = calculateStudentDayCompletion(s.progress, d);
+                                    const studentLock = getAdminStudentDayStatus(s.id, d);
+                                    const globalLock = globalDayLocks[d] || 'default';
+                                    const effectiveLock = studentLock !== 'default' ? studentLock : globalLock;
+
                                     return (
-                                      <div
+                                      <button
                                         key={d}
-                                        title={`Day ${d}: ${pct}% completed`}
-                                        className={`w-5 h-5 rounded-md flex items-center justify-center text-[9px] font-mono font-bold ${
+                                        type="button"
+                                        onClick={() => handleToggleStudentDayLock(s.id, d)}
+                                        title={`Day ${d}: ${pct}% completed • Lock: ${effectiveLock} (Click to toggle for ${s.name})`}
+                                        className={`px-1.5 py-0.5 rounded-md flex items-center gap-0.5 text-[9px] font-mono font-bold transition-all hover:scale-105 cursor-pointer ${
                                           pct === 100
                                             ? 'bg-emerald-500 text-slate-950'
                                             : pct > 0
                                             ? 'bg-amber-500/80 text-slate-950'
-                                            : 'bg-slate-800 text-slate-500'
+                                            : 'bg-slate-800 text-slate-400'
                                         }`}
                                       >
-                                        D{d}
-                                      </div>
+                                        <span>D{d}</span>
+                                        {effectiveLock === 'unlocked' && <Unlock className="w-2.5 h-2.5 text-amber-950 stroke-[3]" />}
+                                        {effectiveLock === 'locked' && <Lock className="w-2.5 h-2.5 text-rose-950 stroke-[3]" />}
+                                      </button>
                                     );
                                   })}
                                 </div>
@@ -700,7 +998,16 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                                 )}
                               </td>
 
-                              <td className="py-3 px-3 text-right">
+                              <td className="py-3 px-3 text-right whitespace-nowrap">
+                                <button
+                                  type="button"
+                                  onClick={() => setInspectingStudent(s)}
+                                  className="px-2.5 py-1 rounded-lg bg-emerald-900/60 hover:bg-emerald-800 text-emerald-200 text-[10px] font-extrabold transition-colors cursor-pointer mr-1.5 inline-flex items-center gap-1"
+                                  title="Audit real completion status, solved questions, and control day locks for this student"
+                                >
+                                  <Eye className="w-3 h-3 text-emerald-400" />
+                                  <span>Audit & Access</span>
+                                </button>
                                 <button
                                   type="button"
                                   onClick={() => {
@@ -730,6 +1037,262 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                       )}
                     </tbody>
                   </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 1.5: DAY UNLOCK & RELOCK CONTROLS */}
+          {activeTab === 'daylocks' && (
+            <div className="space-y-6">
+              {/* Header and Global Controls Banner */}
+              <div className="p-5 rounded-2xl bg-gradient-to-r from-amber-950/40 via-indigo-950/40 to-slate-900 border border-amber-500/40">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <div className="p-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                        <Key className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-extrabold text-base text-white flex items-center gap-2">
+                          Master Day Access & Progression Controller
+                          <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                            Live Override
+                          </span>
+                        </h3>
+                        <p className="text-xs text-slate-300 mt-0.5">
+                          Instantly unlock or relock any day for all learners globally or individually. Overrides strict Day N-1 requirements and IST schedule locks.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleUnlockAllGlobal}
+                      className="px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs shadow-lg shadow-emerald-950/50 flex items-center gap-1.5 cursor-pointer transition-all"
+                    >
+                      <Unlock className="w-4 h-4" />
+                      <span>Unlock All 5 Days Globally</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleRelockAllGlobal}
+                      className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-all"
+                    >
+                      <RotateCcw className="w-4 h-4 text-amber-400" />
+                      <span>Restore Default Schedule</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Day 1-5 Global Status Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mt-4 pt-4 border-t border-indigo-900/40">
+                  {[1, 2, 3, 4, 5].map((d) => {
+                    const status = globalDayLocks[d] || 'default';
+                    return (
+                      <div
+                        key={d}
+                        className={`p-3.5 rounded-xl border transition-all ${
+                          status === 'unlocked'
+                            ? 'bg-emerald-950/40 border-emerald-500/50 shadow-sm'
+                            : status === 'locked'
+                            ? 'bg-rose-950/40 border-rose-500/50 shadow-sm'
+                            : 'bg-[#060a16] border-indigo-900/50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-extrabold text-sm text-white">Day {d}</span>
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                              status === 'unlocked'
+                                ? 'bg-emerald-500/20 text-emerald-300'
+                                : status === 'locked'
+                                ? 'bg-rose-500/20 text-rose-300'
+                                : 'bg-slate-800 text-slate-400'
+                            }`}
+                          >
+                            {status === 'unlocked' ? '🔓 Unlocked' : status === 'locked' ? '🔒 Relocked' : '⏳ Default'}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 mb-3 truncate">
+                          {d === 1
+                            ? 'Arrays, Math & Strings'
+                            : d === 2
+                            ? 'Recursion, Two Pointers & Hashing'
+                            : d === 3
+                            ? 'Linked Lists, Stacks & Queues'
+                            : d === 4
+                            ? 'Trees, BST & Graphs'
+                            : 'Dynamic Programming & Final Exam'}
+                        </p>
+                        <div className="grid grid-cols-3 gap-1 text-[10px] font-bold">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAdminGlobalDayStatus(d, 'default');
+                              setGlobalDayLocks(getAllGlobalDayStatuses());
+                              showToast(`Day ${d} set to Default Schedule`);
+                            }}
+                            className={`py-1 rounded text-center cursor-pointer transition-colors ${
+                              status === 'default'
+                                ? 'bg-indigo-600 text-white font-black'
+                                : 'bg-slate-800/80 text-slate-400 hover:text-white'
+                            }`}
+                          >
+                            Default
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAdminGlobalDayStatus(d, 'unlocked');
+                              setGlobalDayLocks(getAllGlobalDayStatuses());
+                              showToast(`Day ${d} Force Unlocked Globally!`);
+                            }}
+                            className={`py-1 rounded text-center cursor-pointer transition-colors ${
+                              status === 'unlocked'
+                                ? 'bg-emerald-600 text-white font-black'
+                                : 'bg-slate-800/80 text-slate-400 hover:text-emerald-300'
+                            }`}
+                          >
+                            Unlock
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAdminGlobalDayStatus(d, 'locked');
+                              setGlobalDayLocks(getAllGlobalDayStatuses());
+                              showToast(`Day ${d} Relocked Globally!`);
+                            }}
+                            className={`py-1 rounded text-center cursor-pointer transition-colors ${
+                              status === 'locked'
+                                ? 'bg-rose-600 text-white font-black'
+                                : 'bg-slate-800/80 text-slate-400 hover:text-rose-300'
+                            }`}
+                          >
+                            Relock
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Student Overrides Table */}
+              <div className="space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <h4 className="font-extrabold text-sm text-white flex items-center gap-2">
+                      <Users className="w-4 h-4 text-amber-400" />
+                      Individual Learner Day Controls ({filteredStudents.length} Students)
+                    </h4>
+                    <p className="text-xs text-slate-400">
+                      Manage specific unlocks/relocks per student or audit complete submission status.
+                    </p>
+                  </div>
+                  <div className="relative w-full sm:w-64">
+                    <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Search name, email, roll..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-[#060a16] border border-indigo-900/60 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="border border-indigo-900/50 rounded-xl overflow-hidden bg-[#060a16]">
+                  <div className="overflow-x-auto max-h-[480px]">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-[#0c142b] text-slate-300 font-bold border-b border-indigo-900/50 sticky top-0 z-10">
+                        <tr>
+                          <th className="py-2.5 px-3">Student</th>
+                          <th className="py-2.5 px-3 text-center">Overall</th>
+                          <th className="py-2.5 px-3 text-center">Day 1</th>
+                          <th className="py-2.5 px-3 text-center">Day 2</th>
+                          <th className="py-2.5 px-3 text-center">Day 3</th>
+                          <th className="py-2.5 px-3 text-center">Day 4</th>
+                          <th className="py-2.5 px-3 text-center">Day 5</th>
+                          <th className="py-2.5 px-3 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-indigo-950/60">
+                        {filteredStudents.map((s) => {
+                          const overall = calculateStudentOverallCompletion(s.progress);
+                          return (
+                            <tr key={s.id} className="hover:bg-indigo-950/20 transition-colors">
+                              <td className="py-2.5 px-3">
+                                <div className="font-bold text-white text-xs truncate max-w-[180px]">{s.name}</div>
+                                <div className="text-[10px] text-slate-400 font-mono truncate max-w-[180px]">{s.email}</div>
+                              </td>
+                              <td className="py-2.5 px-3 text-center">
+                                <span className={`font-mono text-xs font-bold ${overall === 100 ? 'text-emerald-400' : overall > 0 ? 'text-amber-400' : 'text-slate-500'}`}>
+                                  {overall}%
+                                </span>
+                              </td>
+                              {[1, 2, 3, 4, 5].map((d) => {
+                                const stLock = s.dayOverrides?.[d] || getAdminStudentDayStatus(s.id, d);
+                                const dComp = calculateStudentDayCompletion(s.progress, d);
+                                return (
+                                  <td key={d} className="py-2.5 px-2 text-center">
+                                    <div className="flex flex-col items-center gap-1">
+                                      <span className="text-[10px] font-mono text-slate-400">{dComp}% done</span>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleToggleStudentDayLock(s.id, d)}
+                                        className={`px-2 py-0.5 rounded text-[10px] font-extrabold cursor-pointer transition-colors ${
+                                          stLock === 'unlocked'
+                                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30'
+                                            : stLock === 'locked'
+                                            ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30'
+                                            : 'bg-slate-800 text-slate-400 border border-slate-700 hover:text-slate-200'
+                                        }`}
+                                        title={`Day ${d}: ${stLock} (Click to toggle)`}
+                                      >
+                                        {stLock === 'unlocked' ? '🔓 Unlock' : stLock === 'locked' ? '🔒 Relock' : '⏳ Auto'}
+                                      </button>
+                                    </div>
+                                  </td>
+                                );
+                              })}
+                              <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                                <div className="flex items-center justify-end gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => setInspectingStudent(s)}
+                                    className="px-2.5 py-1 rounded-lg bg-emerald-900/60 hover:bg-emerald-800 text-emerald-200 text-[10px] font-extrabold transition-colors cursor-pointer flex items-center gap-1"
+                                    title="Open comprehensive completion breakdown for this student"
+                                  >
+                                    <Eye className="w-3 h-3 text-emerald-400" />
+                                    <span>Audit</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUnlockAllForStudent(s.id)}
+                                    className="px-2 py-1 rounded-lg bg-indigo-900/60 hover:bg-indigo-800 text-indigo-200 text-[10px] font-bold transition-colors cursor-pointer"
+                                    title="Unlock all 5 days for this learner"
+                                  >
+                                    Unlock 1-5
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleResetStudentDayLocks(s.id)}
+                                    className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-bold transition-colors cursor-pointer"
+                                    title="Reset student locks to default"
+                                  >
+                                    Reset
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1423,6 +1986,478 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
             </div>
           )}
         </div>
+
+        {/* COMPREHENSIVE STUDENT COMPLETION AUDIT & LOCK INSPECTOR MODAL */}
+        {inspectingStudent && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
+            <div className="relative w-full max-w-5xl h-[92vh] max-h-[880px] bg-[#070c1d] border border-amber-500/50 rounded-2xl shadow-2xl flex flex-col overflow-hidden text-slate-100">
+              {/* Header */}
+              <div className="p-4 sm:p-5 border-b border-indigo-900/60 bg-[#0a1128] flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center text-white font-extrabold text-lg shadow-lg">
+                    {inspectingStudent.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-extrabold text-base sm:text-lg text-white">
+                        {inspectingStudent.name}
+                      </h3>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        Real Firebase User
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-400 font-mono flex flex-wrap items-center gap-x-3 gap-y-1 mt-0.5">
+                      <span>{inspectingStudent.email}</span>
+                      <span>•</span>
+                      <span>UID: {inspectingStudent.id}</span>
+                      {inspectingStudent.rollNo && (
+                        <>
+                          <span>•</span>
+                          <span className="text-amber-300 font-bold">Roll: {inspectingStudent.rollNo}</span>
+                        </>
+                      )}
+                      <span>•</span>
+                      <span className="text-slate-300">
+                        Last Active: {new Date(inspectingStudent.lastActive || inspectingStudent.registeredAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setInspectingStudent(null)}
+                  className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Quick Metrics Bar & Batch Actions for this Student */}
+              <div className="p-3.5 bg-[#060a16] border-b border-indigo-900/40 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-4 text-xs">
+                  <div>
+                    <span className="text-slate-400 block text-[10px] font-semibold">Overall Progress</span>
+                    <span className="text-base font-extrabold text-amber-300">
+                      {calculateStudentOverallCompletion(inspectingStudent.progress)}%
+                    </span>
+                  </div>
+                  <div className="h-6 w-px bg-indigo-900/60" />
+                  <div>
+                    <span className="text-slate-400 block text-[10px] font-semibold">Final Exam</span>
+                    <span className={`font-bold ${inspectingStudent.progress?.finalExamPassed ? 'text-emerald-400' : 'text-slate-400'}`}>
+                      {inspectingStudent.progress?.finalExamPassed
+                        ? `Passed (${inspectingStudent.progress?.finalExamScore || 0}%)`
+                        : inspectingStudent.progress?.finalExamScore
+                        ? `Attempted (${inspectingStudent.progress.finalExamScore}%)`
+                        : 'Not Attempted'}
+                    </span>
+                  </div>
+                  <div className="h-6 w-px bg-indigo-900/60" />
+                  <div>
+                    <span className="text-slate-400 block text-[10px] font-semibold">Solved Programs</span>
+                    <span className="font-bold text-teal-300">
+                      {inspectingStudent.progress?.acknowledgedSolvedProgramIds?.length || 0} / 30 Done
+                    </span>
+                  </div>
+                  <div className="h-6 w-px bg-indigo-900/60" />
+                  <div>
+                    <span className="text-slate-400 block text-[10px] font-semibold">Badges Earned</span>
+                    <span className="font-bold text-purple-300">
+                      {Object.values(inspectingStudent.progress?.badgesUnlocked || {}).filter(Boolean).length} Badges
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleUnlockAllForStudent(inspectingStudent.id)}
+                    className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs flex items-center gap-1.5 cursor-pointer shadow-md transition-colors"
+                  >
+                    <Unlock className="w-3.5 h-3.5" />
+                    <span>Unlock All 5 Days</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleRelockAllForStudent(inspectingStudent.id)}
+                    className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-md transition-colors"
+                  >
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>Relock All Days</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleResetStudentDayLocks(inspectingStudent.id)}
+                    className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold cursor-pointer transition-colors"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Reset Locks</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleResetStudentProgress(inspectingStudent.id)}
+                    className="px-3 py-1.5 rounded-xl bg-red-950/60 hover:bg-red-900 text-red-200 border border-red-800/60 text-xs font-bold cursor-pointer transition-colors"
+                    title="Wipe learner progress to 0% and test from fresh"
+                  >
+                    Reset Progress
+                  </button>
+                </div>
+              </div>
+
+              {/* Scrollable Audit Body */}
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+                {/* 5-DAY DETAILED COMPLETION BREAKDOWN */}
+                <div>
+                  <h4 className="text-sm font-extrabold text-white flex items-center gap-2 mb-3">
+                    <Layers className="w-4 h-4 text-amber-400" />
+                    Day-by-Day Real Completion Status & Overrides
+                  </h4>
+
+                  <div className="space-y-4">
+                    {[1, 2, 3, 4, 5].map((d) => {
+                      const dLock = inspectingStudent.dayOverrides?.[d] || getAdminStudentDayStatus(inspectingStudent.id, d);
+                      const dComp = calculateStudentDayCompletion(inspectingStudent.progress, d);
+                      const preDone = inspectingStudent.progress?.dayPreAssessmentPassed?.[d];
+                      const preScore = inspectingStudent.progress?.dayPreAssessmentScores?.[d] ?? 0;
+                      const postDone = inspectingStudent.progress?.dayPostAssessmentPassed?.[d];
+                      const postScore = inspectingStudent.progress?.dayPostAssessmentScores?.[d] ?? 0;
+                      
+                      const daySolvedPrograms = SOLVED_PROGRAMS.filter((p) => p.day === d);
+                      const acknowledgedList = inspectingStudent.progress?.acknowledgedSolvedProgramIds || [];
+                      const ackSet = new Set(acknowledgedList.map((id: string) => id.toLowerCase()));
+                      const ackCountForDay = daySolvedPrograms.filter((p) => ackSet.has(p.id.toLowerCase())).length;
+
+                      const dayQuestions = TOPICS.filter((t) => t.day === d).flatMap((t) => t.questions);
+                      const completedQuestionsList = inspectingStudent.progress?.completedQuestionIds || [];
+                      const questionsSolvedForDay = dayQuestions.filter((q) => completedQuestionsList.includes(q.id)).length;
+
+                      return (
+                        <div
+                          key={d}
+                          className={`p-4 rounded-xl border transition-all ${
+                            dLock === 'unlocked'
+                              ? 'bg-[#09152b] border-emerald-500/50'
+                              : dLock === 'locked'
+                              ? 'bg-[#150a14] border-rose-500/50'
+                              : 'bg-[#080d1e] border-indigo-900/50'
+                          }`}
+                        >
+                          {/* Day Card Header */}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-indigo-900/40 gap-3">
+                            <div className="flex items-center gap-2.5">
+                              <span className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-300 font-extrabold text-sm flex items-center justify-center border border-amber-500/40">
+                                D{d}
+                              </span>
+                              <div>
+                                <div className="font-extrabold text-sm text-white flex items-center gap-2">
+                                  <span>Day {d} Audit</span>
+                                  <span
+                                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                      dLock === 'unlocked'
+                                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                                        : dLock === 'locked'
+                                        ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                                        : 'bg-slate-800 text-slate-400 border border-slate-700'
+                                    }`}
+                                  >
+                                    {dLock === 'unlocked'
+                                      ? '🔓 Admin Unlocked'
+                                      : dLock === 'locked'
+                                      ? '🔒 Relocked by Admin'
+                                      : '⏳ Default Progression'}
+                                  </span>
+                                </div>
+                                <div className="text-[11px] text-slate-400">
+                                  {d === 1
+                                    ? 'Arrays, Math & Strings'
+                                    : d === 2
+                                    ? 'Recursion, Two Pointers & Hashing'
+                                    : d === 3
+                                    ? 'Linked Lists, Stacks & Queues'
+                                    : d === 4
+                                    ? 'Trees, BST & Graphs'
+                                    : 'Dynamic Programming & Final Exam'}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Day Quick Controls */}
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleToggleStudentDayLock(inspectingStudent.id, d)}
+                                className="px-2.5 py-1 rounded-lg bg-indigo-900/60 hover:bg-indigo-800 text-indigo-200 text-xs font-bold cursor-pointer transition-colors"
+                                title="Toggle between Default -> Unlocked -> Relocked"
+                              >
+                                Toggle Access
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setAdminStudentDayStatus(inspectingStudent.id, d, 'unlocked');
+                                  const updated = getAllStudents();
+                                  setStudents(updated);
+                                  setInspectingStudent(updated.find((s) => s.id === inspectingStudent.id) || null);
+                                  showToast(`Day ${d} Force Unlocked for this learner!`);
+                                }}
+                                className={`px-2.5 py-1 rounded-lg text-xs font-bold cursor-pointer transition-colors ${
+                                  dLock === 'unlocked'
+                                    ? 'bg-emerald-600 text-white'
+                                    : 'bg-emerald-950/60 hover:bg-emerald-900 text-emerald-300 border border-emerald-800/60'
+                                }`}
+                              >
+                                Unlock Day
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setAdminStudentDayStatus(inspectingStudent.id, d, 'locked');
+                                  const updated = getAllStudents();
+                                  setStudents(updated);
+                                  setInspectingStudent(updated.find((s) => s.id === inspectingStudent.id) || null);
+                                  showToast(`Day ${d} Force Relocked for this learner!`);
+                                }}
+                                className={`px-2.5 py-1 rounded-lg text-xs font-bold cursor-pointer transition-colors ${
+                                  dLock === 'locked'
+                                    ? 'bg-rose-600 text-white'
+                                    : 'bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-800/60'
+                                }`}
+                              >
+                                Relock Day
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleMarkStudentDayComplete(inspectingStudent.id, d)}
+                                className="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-extrabold cursor-pointer transition-colors"
+                                title="Mark Pre-assessment, 6 solved programs, and Post-assessment complete for this student"
+                              >
+                                ✓ Mark Day Done
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Completion Details Grid */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-3">
+                            {/* 1. Day Progress */}
+                            <div className="p-3 rounded-lg bg-[#050914] border border-indigo-900/30">
+                              <span className="text-[10px] text-slate-400 font-semibold block">Day Completion</span>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className={`text-base font-extrabold ${dComp === 100 ? 'text-emerald-400' : dComp > 0 ? 'text-amber-400' : 'text-slate-500'}`}>
+                                  {dComp}%
+                                </span>
+                                <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
+                                  <div
+                                    className={`h-full ${dComp === 100 ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                                    style={{ width: `${dComp}%` }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* 2. Pre-Assessment */}
+                            <div className="p-3 rounded-lg bg-[#050914] border border-indigo-900/30">
+                              <span className="text-[10px] text-slate-400 font-semibold block">Pre-Assessment</span>
+                              <div className="mt-1 flex items-center justify-between">
+                                <span className={`text-xs font-bold ${preDone ? 'text-emerald-300' : 'text-slate-400'}`}>
+                                  {preDone ? `Completed ✓ (${preScore}/5)` : 'Pending / Not Attempted'}
+                                </span>
+                                {preDone && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                              </div>
+                            </div>
+
+                            {/* 3. 6 Solved Programs */}
+                            <div className="p-3 rounded-lg bg-[#050914] border border-indigo-900/30">
+                              <span className="text-[10px] text-slate-400 font-semibold block">6 Solved Programs</span>
+                              <div className="mt-1 flex items-center justify-between">
+                                <span className={`text-xs font-bold ${ackCountForDay === 6 ? 'text-emerald-300' : ackCountForDay > 0 ? 'text-amber-300' : 'text-slate-400'}`}>
+                                  {ackCountForDay} / 6 Acknowledged
+                                </span>
+                                <span className="text-[10px] font-mono text-slate-400">
+                                  {ackCountForDay === 6 ? '100% ✓' : `${Math.round((ackCountForDay / 6) * 100)}%`}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* 4. Post-Assessment */}
+                            <div className="p-3 rounded-lg bg-[#050914] border border-indigo-900/30">
+                              <span className="text-[10px] text-slate-400 font-semibold block">Post-Assessment</span>
+                              <div className="mt-1 flex items-center justify-between">
+                                <span className={`text-xs font-bold ${postDone ? 'text-emerald-300' : 'text-slate-400'}`}>
+                                  {postDone ? `Completed ✓ (${postScore}/5)` : 'Pending / Not Attempted'}
+                                </span>
+                                {postDone && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* List of 6 Solved Programs Detail */}
+                          <div className="mt-3 pt-3 border-t border-indigo-900/30">
+                            <span className="text-[11px] font-bold text-slate-300 block mb-2">
+                              Day {d} Required Solved Programs Audit (6 Programs):
+                            </span>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                              {daySolvedPrograms.map((prog) => {
+                                const isAck = ackSet.has(prog.id.toLowerCase());
+                                return (
+                                  <div
+                                    key={prog.id}
+                                    className={`p-2 rounded-lg border text-xs flex items-start justify-between gap-2 ${
+                                      isAck
+                                        ? 'bg-emerald-950/30 border-emerald-800/40 text-emerald-200'
+                                        : 'bg-[#03060f] border-slate-800 text-slate-400'
+                                    }`}
+                                  >
+                                    <div className="truncate">
+                                      <div className="font-bold text-[11px] truncate text-white">{prog.title}</div>
+                                      <div className="text-[10px] text-slate-400">{prog.topicTag} • {prog.difficulty}</div>
+                                    </div>
+                                    <span
+                                      className={`shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                                        isAck
+                                          ? 'bg-emerald-500/20 text-emerald-300'
+                                          : 'bg-slate-800 text-slate-500'
+                                      }`}
+                                    >
+                                      {isAck ? '✓ Done' : 'Pending'}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* LEVEL 0 & VISUALIZERS AUDIT */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-xl bg-[#080d1e] border border-indigo-900/50">
+                    <h5 className="font-extrabold text-sm text-white flex items-center gap-2 mb-2">
+                      <BookOpen className="w-4 h-4 text-amber-400" />
+                      Level 0 Programming Fundamentals
+                    </h5>
+                    <p className="text-xs text-slate-400 mb-3">
+                      Prerequisite track covering C++, Java, and Python fundamentals.
+                    </p>
+                    <div className="text-xs text-slate-300 font-mono">
+                      Completed Fundamentals: {TOPICS.filter((t) => t.day === 0).flatMap((t) => t.questions).filter((q) => (inspectingStudent.progress?.completedQuestionIds || []).includes(q.id)).length} / {TOPICS.filter((t) => t.day === 0).flatMap((t) => t.questions).length} Questions
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-[#080d1e] border border-indigo-900/50">
+                    <h5 className="font-extrabold text-sm text-white flex items-center gap-2 mb-2">
+                      <Sparkles className="w-4 h-4 text-purple-400" />
+                      Interactive Algorithm Visualizers
+                    </h5>
+                    <p className="text-xs text-slate-400 mb-3">
+                      Hands-on interactive simulations for Searching, Sorting, Trees, and Graphs.
+                    </p>
+                    <div className="text-xs text-slate-300 font-mono">
+                      Visualizers completed / acknowledged: {inspectingStudent.progress?.visualizationCompletedIds?.length || 0}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="p-4 border-t border-indigo-900/60 bg-[#0a1128] flex items-center justify-between">
+                <span className="text-xs text-slate-400">
+                  Placement Masterclass Admin Audit Console • Kapil
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setInspectingStudent(null)}
+                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs cursor-pointer transition-colors"
+                >
+                  Close Audit View
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* JSON SNAPSHOT IMPORT MODAL */}
+        {showImportModal && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
+            <div className="relative w-full max-w-xl bg-[#070c1d] border border-amber-500/50 rounded-2xl shadow-2xl p-6 text-slate-100 space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-indigo-900/60">
+                <div className="flex items-center gap-2">
+                  <FileJson className="w-5 h-5 text-amber-400" />
+                  <h3 className="font-extrabold text-base text-white">
+                    Import Learner Roster & Day Locks Snapshot
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowImportModal(false)}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <p className="text-xs text-slate-300">
+                Upload a snapshot file or paste the exported JSON text below to sync student progress and day lock overrides across devices or environments.
+              </p>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                  Upload .json file:
+                </label>
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (event) => {
+                        const text = event.target?.result as string;
+                        if (text) setImportJsonText(text);
+                      };
+                      reader.readAsText(file);
+                    }
+                  }}
+                  className="text-xs text-slate-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-indigo-900/60 file:text-indigo-200 hover:file:bg-indigo-800 cursor-pointer"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                  Or Paste JSON directly:
+                </label>
+                <textarea
+                  rows={6}
+                  value={importJsonText}
+                  onChange={(e) => setImportJsonText(e.target.value)}
+                  placeholder='{"version": 1, "exportedAt": "...", "students": [...]}'
+                  className="w-full p-3 rounded-xl bg-[#040711] border border-indigo-900/60 text-xs text-slate-200 font-mono placeholder-slate-600 focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowImportModal(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleImportJSON}
+                  disabled={!importJsonText.trim()}
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 disabled:opacity-50 text-slate-950 text-xs font-extrabold cursor-pointer shadow-lg"
+                >
+                  Import Snapshot
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

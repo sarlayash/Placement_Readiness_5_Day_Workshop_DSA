@@ -189,6 +189,8 @@ export interface AptitudeMCQ {
   };
 }
 
+export type DayLockStatus = 'default' | 'unlocked' | 'locked';
+
 export interface StudentRecord {
   id: string;
   name: string;
@@ -201,7 +203,9 @@ export interface StudentRecord {
   progress: UserProgress;
   customBadges?: string[];
   customCertificates?: string[];
+  dayOverrides?: Record<number, DayLockStatus>;
 }
+
 
 export interface AdminCustomBadge {
   id: string;

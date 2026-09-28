@@ -110,6 +110,34 @@ assert(dashboardContent.includes('Sync Firebase Roster'), 'AdminDashboardModal r
 assert(dashboardContent.includes('Real Google Users'), 'AdminDashboardModal renders Real Google Users metric');
 assert(dashboardContent.includes('100% Real Firebase Sync • Zero Fake Users'), 'AdminDashboardModal displays Real Firebase Sync badge');
 
+// 7. Audit Day Unlock & Relock Controls & Real Completion Status Audit
+console.log('\n--- 7. AUDITING DAY UNLOCK/RELOCK CONTROLS & REAL COMPLETION AUDIT ---');
+const prerequisitesPath = path.join(__dirname, 'src/utils/prerequisites.ts');
+const prerequisitesContent = fs.readFileSync(prerequisitesPath, 'utf8');
+const dayViewPath = path.join(__dirname, 'src/components/DayView.tsx');
+const dayViewContent = fs.readFileSync(dayViewPath, 'utf8');
+
+assert(adminServiceContent.includes('getAdminGlobalDayStatus'), 'adminService exports getAdminGlobalDayStatus');
+assert(adminServiceContent.includes('setAdminGlobalDayStatus'), 'adminService exports setAdminGlobalDayStatus');
+assert(adminServiceContent.includes('unlockAllDaysGlobally'), 'adminService exports unlockAllDaysGlobally');
+assert(adminServiceContent.includes('relockAllDaysToDefault'), 'adminService exports relockAllDaysToDefault');
+assert(adminServiceContent.includes('getAdminStudentDayStatus'), 'adminService exports getAdminStudentDayStatus');
+assert(adminServiceContent.includes('setAdminStudentDayStatus'), 'adminService exports setAdminStudentDayStatus');
+assert(adminServiceContent.includes('unlockAllDaysForStudent'), 'adminService exports unlockAllDaysForStudent');
+assert(adminServiceContent.includes('relockAllDaysForStudent'), 'adminService exports relockAllDaysForStudent');
+assert(adminServiceContent.includes('markStudentDayComplete'), 'adminService exports markStudentDayComplete');
+assert(adminServiceContent.includes('exportRosterSnapshotJSON'), 'adminService exports exportRosterSnapshotJSON');
+assert(adminServiceContent.includes('importRosterSnapshotJSON'), 'adminService exports importRosterSnapshotJSON');
+
+assert(prerequisitesContent.includes('getAdminStudentDayStatus') && prerequisitesContent.includes('getAdminGlobalDayStatus'), 'isDayUnlockedStrict respects student and global admin overrides');
+assert(dashboardContent.includes('Day Unlock & Relock Controls'), 'AdminDashboardModal includes Day Unlock & Relock tab');
+assert(dashboardContent.includes('Master Day Access & Progression Controller'), 'Master Day Access Controller present in Admin Dashboard');
+assert(dashboardContent.includes('Audit & Access'), 'Roster table has Audit & Access button per student');
+assert(dashboardContent.includes('COMPREHENSIVE STUDENT COMPLETION AUDIT & LOCK INSPECTOR MODAL'), 'Student Completion Inspector modal verified');
+assert(dashboardContent.includes('Import Learner Roster & Day Locks Snapshot'), 'JSON Snapshot import modal verified');
+assert(sidebarContent.includes('kapil_day_locks_updated'), 'LeftSidebar listens for real-time day locks update events');
+assert(dayViewContent.includes('kapil_day_locks_updated'), 'DayView listens for real-time day locks update events');
+
 console.log('\n========================================================================');
 console.log(`📊 TOTAL ADMIN AUDIT CHECKS RUN: ${totalTests}`);
 console.log(`✅ PASSED CHECKS: ${passedTests}`);

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Topic, Question, UserProgress, FeedbackWindowStatus } from '../types';
 import { ISTStatus } from '../utils/istTime';
-import { checkDayCompletion, checkFinalExamEligibility } from '../utils/prerequisites';
+import { checkDayCompletion, checkFinalExamEligibility, isDayUnlockedStrict } from '../utils/prerequisites';
 import { formatFeedbackTimer } from '../utils/feedback';
 import {
   Award,
@@ -15,6 +15,7 @@ import {
   BookOpen,
   FileCheck2,
   Lock,
+  Unlock,
   CheckCircle2,
   AlertCircle,
   MessageSquare,
@@ -43,6 +44,7 @@ interface DayViewProps {
   feedbackStatus?: FeedbackWindowStatus;
   onOpenAdmin?: () => void;
   isAdmin?: boolean;
+  userId?: string;
 }
 
 export const DayView: React.FC<DayViewProps> = ({
@@ -64,13 +66,23 @@ export const DayView: React.FC<DayViewProps> = ({
   feedbackStatus,
   onOpenAdmin,
   isAdmin = false,
+  userId,
 }) => {
+  const [, setLockVersion] = useState(0);
+
+  useEffect(() => {
+    const handler = () => setLockVersion((v) => v + 1);
+    window.addEventListener('kapil_day_locks_updated', handler);
+    return () => window.removeEventListener('kapil_day_locks_updated', handler);
+  }, []);
+
   const [activePart, setActivePart] = useState<1 | 2>(1);
   const [activeMainView, setActiveMainView] = useState<'syllabus' | 'solved' | 'all'>('syllabus');
   const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(null);
 
   const selectedTopic = topics.find((t) => t.part === activePart) || topics[0];
 
+  const lockResult = isDayUnlockedStrict(day, progress, istStatus, demoBypass, userId);
   const dayStatus = checkDayCompletion(day, progress);
   const examEligibility = checkFinalExamEligibility(progress, demoBypass);
 
@@ -91,6 +103,46 @@ export const DayView: React.FC<DayViewProps> = ({
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-12">
+      {/* Admin Override Alert Banner */}
+      {lockResult.adminOverridden && lockResult.unlocked && (
+        <div className="p-3.5 rounded-2xl bg-amber-950/40 border border-amber-500/50 flex items-center justify-between gap-3 text-amber-200 text-xs shadow-md animate-fadeIn">
+          <div className="flex items-center gap-2.5">
+            <Unlock className="w-5 h-5 text-amber-400 shrink-0" />
+            <div>
+              <span className="font-extrabold text-amber-300">Admin Override Active:</span> Day {day} has been unlocked for you by Admin Kapil. Full access is granted to all curriculum questions, masterclasses, and assessments!
+            </div>
+          </div>
+          <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold border border-amber-500/30 whitespace-nowrap">
+            Admin Unlocked ✓
+          </span>
+        </div>
+      )}
+
+      {/* Relocked / Locked Alert Banner if day is locked */}
+      {!lockResult.unlocked && (
+        <div className="p-4 rounded-2xl bg-rose-950/40 border border-rose-500/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-rose-200 text-xs shadow-md animate-fadeIn">
+          <div className="flex items-center gap-2.5">
+            <Lock className="w-5 h-5 text-rose-400 shrink-0" />
+            <div>
+              <div className="font-extrabold text-rose-300 text-sm">
+                {lockResult.adminOverridden ? `Day ${day} Relocked by Admin Kapil` : `Day ${day} Access Locked`}
+              </div>
+              <div className="text-[11px] text-rose-300/80 mt-0.5">
+                {lockResult.reason || `You must complete all steps of Day ${day - 1} to unlock this day.`}
+              </div>
+            </div>
+          </div>
+          {isAdmin && onOpenAdmin && (
+            <button
+              onClick={onOpenAdmin}
+              className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shrink-0 cursor-pointer shadow"
+            >
+              Unlock in Admin Panel
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Day Header Banner - Clean White Card with Rainbow Title */}
       <div className="rounded-3xl border border-slate-200 bg-white p-6 md:p-8 space-y-4 shadow-sm relative overflow-hidden">
         {/* Subtle top rainbow line */}

@@ -1,4 +1,4 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useState, useEffect } from 'react';
 import { UserProgress, FeedbackWindowStatus } from '../types';
 import { ISTStatus } from '../utils/istTime';
 import { isDayUnlockedStrict, checkDayCompletion } from '../utils/prerequisites';
@@ -50,6 +50,7 @@ interface LeftSidebarProps {
   feedbackStatus?: FeedbackWindowStatus;
   onOpenAdmin?: () => void;
   isAdmin?: boolean;
+  userId?: string;
 }
 
 const DAY_METADATA = [
@@ -86,7 +87,16 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   feedbackStatus,
   onOpenAdmin,
   isAdmin = false,
+  userId,
 }) => {
+  const [, setLockVersion] = useState<number>(0);
+
+  useEffect(() => {
+    const handler = () => setLockVersion((v: number) => v + 1);
+    window.addEventListener('kapil_day_locks_updated', handler);
+    return () => window.removeEventListener('kapil_day_locks_updated', handler);
+  }, []);
+
   const isDraggingRef = useRef(false);
 
   const startResizing = useCallback(
@@ -242,7 +252,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
             <div className="space-y-1.5">
               {DAY_METADATA.map((item) => {
                 const isSelected = currentDay === item.day;
-                const lockState = isDayUnlockedStrict(item.day, progress, istStatus, demoBypass);
+                const lockState = isDayUnlockedStrict(item.day, progress, istStatus, demoBypass, userId);
                 const dayStatus = checkDayCompletion(item.day, progress);
                 const isCompleted = dayStatus.isComplete;
                 const prePassed = !!progress.dayPreAssessmentPassed[item.day];
@@ -259,7 +269,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
                       }
                     }}
                     disabled={!lockState.unlocked}
-                    title={isCollapsed ? `Day ${item.day}: ${item.part1}` : undefined}
+                    title={isCollapsed ? `Day ${item.day}: ${item.part1}` : lockState.reason || undefined}
                     className={`w-full text-left rounded-2xl border transition-all relative cursor-pointer ${
                       isCollapsed ? 'p-2 flex flex-col items-center justify-center' : 'p-3'
                     } ${
@@ -286,13 +296,23 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
 
                         {!isCollapsed && (
                           <div className="min-w-0">
-                            <div className="text-xs font-extrabold tracking-tight flex items-center gap-1.5">
+                            <div className="text-xs font-extrabold tracking-tight flex items-center gap-1.5 flex-wrap">
                               <span className={isSelected ? 'rainbow-text font-black' : 'text-white'}>
                                 Day {item.day}
                               </span>
                               {isCompleted && (
                                 <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 font-bold">
                                   Won
+                                </span>
+                              )}
+                              {lockState.adminOverridden && lockState.unlocked && (
+                                <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-amber-950 text-amber-300 border border-amber-700/60 font-bold" title={lockState.reason}>
+                                  🔓 Admin
+                                </span>
+                              )}
+                              {lockState.adminOverridden && !lockState.unlocked && (
+                                <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-rose-950 text-rose-300 border border-rose-700/60 font-bold" title={lockState.reason}>
+                                  🔒 Relocked
                                 </span>
                               )}
                             </div>

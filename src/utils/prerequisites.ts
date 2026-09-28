@@ -2,6 +2,7 @@ import { UserProgress } from '../types';
 import { TOPICS } from '../data/curriculum';
 import { SOLVED_PROGRAMS } from '../data/solvedPrograms';
 import { ISTStatus } from './istTime';
+import { getAdminGlobalDayStatus, getAdminStudentDayStatus } from './adminService';
 
 export interface DayCompletionStatus {
   day: number;
@@ -25,6 +26,7 @@ export interface DayUnlockResult {
   reason?: string;
   missingDay?: number;
   missingTasks?: string[];
+  adminOverridden?: boolean;
 }
 
 export interface FinalExamEligibility {
@@ -110,19 +112,62 @@ export function checkDayCompletion(
 
 /**
  * Checks if a specific day is accessible to the learner.
- * STRICT RULE: Day N will not unlock unless ALL sections of Day N-1 are 100% completed.
+ * Priority order:
+ * 1. Student-specific Admin Override (unlock/relock)
+ * 2. Global Admin Override (unlock/relock)
+ * 3. Demo Bypass
+ * 4. IST Time Window Lock
+ * 5. Day 1 is unlocked during IST window
+ * 6. Days 2 to 5 strictly require ALL sections of Day N-1
  */
 export function isDayUnlockedStrict(
   dayNumber: number,
   progress: UserProgress,
   istStatus: ISTStatus,
-  demoBypass = false
+  demoBypass = false,
+  userEmailOrId?: string
 ): DayUnlockResult {
+  // 1. Check Student-Specific Admin Override
+  if (userEmailOrId) {
+    const studentStatus = getAdminStudentDayStatus(userEmailOrId, dayNumber);
+    if (studentStatus === 'unlocked') {
+      return {
+        unlocked: true,
+        adminOverridden: true,
+        reason: `Day ${dayNumber} is unlocked by Admin Kapil for your account.`,
+      };
+    }
+    if (studentStatus === 'locked') {
+      return {
+        unlocked: false,
+        adminOverridden: true,
+        reason: `Day ${dayNumber} has been relocked by Admin Kapil. Please contact instructor for access.`,
+      };
+    }
+  }
+
+  // 2. Check Global Admin Override
+  const globalStatus = getAdminGlobalDayStatus(dayNumber);
+  if (globalStatus === 'unlocked') {
+    return {
+      unlocked: true,
+      adminOverridden: true,
+      reason: `Day ${dayNumber} is unlocked globally by Admin Kapil.`,
+    };
+  }
+  if (globalStatus === 'locked') {
+    return {
+      unlocked: false,
+      adminOverridden: true,
+      reason: `Day ${dayNumber} has been relocked by Admin Kapil. Access is currently paused.`,
+    };
+  }
+
   if (demoBypass) {
     return { unlocked: true };
   }
 
-  // 1. Check IST Time Window Lock
+  // 3. Check IST Time Window Lock
   if (!istStatus.isWithinActiveWindow) {
     return {
       unlocked: false,
@@ -130,12 +175,12 @@ export function isDayUnlockedStrict(
     };
   }
 
-  // 2. Day 1 is always unlocked during active IST window
+  // 4. Day 1 is always unlocked during active IST window
   if (dayNumber === 1) {
     return { unlocked: true };
   }
 
-  // 3. Days 2 to 5 strictly require ALL sections of Day N-1
+  // 5. Days 2 to 5 strictly require ALL sections of Day N-1
   const prevDay = dayNumber - 1;
   const prevStatus = checkDayCompletion(prevDay, progress);
 
