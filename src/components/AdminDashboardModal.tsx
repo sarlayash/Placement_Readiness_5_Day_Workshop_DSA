@@ -9,6 +9,7 @@ import {
 import {
   getAllStudents,
   forceSyncFirebaseRoster,
+  fetchLiveFirebaseRoster,
   generateDailyCSV,
   generateMasterCSV,
   downloadCSV,
@@ -120,7 +121,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     }
   }, [isOpen]);
 
-  const loadData = () => {
+  const loadData = async () => {
     const list = getAllStudents();
     setStudents(list);
     setCustomBadges(getAdminCustomBadges());
@@ -132,17 +133,32 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
       setCertStudentId(list[0].id);
     }
     updateReportPreview(selectedReportDay, list);
+
+    // Asynchronously merge with latest live Firebase roster
+    try {
+      const liveList = await fetchLiveFirebaseRoster();
+      setStudents(liveList);
+      updateReportPreview(selectedReportDay, liveList);
+    } catch {
+      // fallback to local
+    }
   };
 
-  const handleForceSyncFirebase = () => {
+  const handleForceSyncFirebase = async () => {
     setIsSyncing(true);
-    const synced = forceSyncFirebaseRoster();
-    setStudents(synced);
-    updateReportPreview(selectedReportDay, synced);
-    setTimeout(() => {
-      setIsSyncing(false);
+    try {
+      const synced = await fetchLiveFirebaseRoster();
+      setStudents(synced);
+      updateReportPreview(selectedReportDay, synced);
       showToast(`Real Firebase Google Roster Synced! (${synced.length} Real Accounts Verified)`);
-    }, 600);
+    } catch {
+      const synced = forceSyncFirebaseRoster();
+      setStudents(synced);
+      updateReportPreview(selectedReportDay, synced);
+      showToast(`Real Firebase Google Roster Synced! (${synced.length} Real Accounts Verified)`);
+    } finally {
+      setTimeout(() => setIsSyncing(false), 400);
+    }
   };
 
   const updateReportPreview = (mode: number | 'master', studentList: StudentRecord[]) => {

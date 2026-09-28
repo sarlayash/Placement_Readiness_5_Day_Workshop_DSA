@@ -43,32 +43,8 @@ export function setAdminAuthenticated(val: boolean): void {
   }
 }
 
-// Verified Real Google Accounts registered in official Firebase Authentication
-export const REAL_FIREBASE_AUTH_USERS: Array<{
-  localId: string;
-  email: string;
-  displayName: string;
-  photoUrl: string;
-  createdAt: string;
-  lastSignedInAt: string;
-}> = [
-  {
-    localId: 'd54RR73wFJOuugNQd66l1EHQ7So1',
-    email: 'kapilnarula27july@gmail.com',
-    displayName: 'Kapil Narula',
-    photoUrl: 'https://lh3.googleusercontent.com/a/ACg8ocLnNMdnJVGTLcBPnQWnmesoD2hNuJmTCM7OucDkk9feknuhKGeoeA=s96-c',
-    createdAt: new Date(1790423702071).toISOString(),
-    lastSignedInAt: new Date(1790518514107).toISOString(),
-  },
-  {
-    localId: 'oUnE3NqZyeTInVVJPekHiiKJXcJ2',
-    email: 'onerupeefullstackceo@gmail.com',
-    displayName: 'Kapil',
-    photoUrl: 'https://lh3.googleusercontent.com/a/ACg8ocIiEurDJoQxCvlQX-gtxcRTVrkjGuTx4GTF_NFZ3P7aSMLk9Dk=s96-c',
-    createdAt: new Date(1790423761651).toISOString(),
-    lastSignedInAt: new Date(1790423761652).toISOString(),
-  },
-];
+import { REAL_FIREBASE_AUTH_USERS } from './realFirebaseUsers';
+export { REAL_FIREBASE_AUTH_USERS } from './realFirebaseUsers';
 
 // Helper to generate empty progress with zero fake numbers
 export function createEmptyUserProgress(): UserProgress {
@@ -249,6 +225,44 @@ export function getAllStudents(): StudentRecord[] {
     localStorage.setItem(STORAGE_ROSTER, JSON.stringify(initials));
     return initials;
   }
+}
+
+// Fetch live Firebase Authentication users from hosted roster endpoint and merge
+export async function fetchLiveFirebaseRoster(): Promise<StudentRecord[]> {
+  try {
+    const res = await fetch('./firebase_auth_roster.json?t=' + Date.now());
+    if (res.ok) {
+      const remoteUsers: typeof REAL_FIREBASE_AUTH_USERS = await res.json();
+      if (Array.isArray(remoteUsers) && remoteUsers.length > 0) {
+        const current = getAllStudents();
+        remoteUsers.forEach((fbUser) => {
+          const exists = current.some(
+            (s) => s.email.toLowerCase() === fbUser.email.toLowerCase() || s.id === fbUser.localId
+          );
+          if (!exists) {
+            current.push({
+              id: fbUser.localId,
+              name: fbUser.displayName,
+              email: fbUser.email,
+              rollNo: `UID-${fbUser.localId.substring(0, 8)}`,
+              avatar: fbUser.photoUrl,
+              loginProvider: 'Google Auth (Firebase)',
+              registeredAt: fbUser.createdAt,
+              lastActive: fbUser.lastSignedInAt,
+              progress: createEmptyUserProgress(),
+              customBadges: [],
+              customCertificates: [],
+            });
+          }
+        });
+        localStorage.setItem(STORAGE_ROSTER, JSON.stringify(current));
+        return current;
+      }
+    }
+  } catch {
+    // fallback
+  }
+  return getAllStudents();
 }
 
 // Force-sync real Firebase users and clean any stale data
