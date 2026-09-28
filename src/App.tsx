@@ -581,14 +581,16 @@ export function App() {
                   {dayLockState.reason}
                 </p>
                 <div className="pt-2 flex items-center justify-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setDemoBypass(true)}
-                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-xs hover:opacity-90 transition-all cursor-pointer flex items-center gap-1.5 shadow-xs"
-                  >
-                    <Unlock className="w-3.5 h-3.5" />
-                    <span>Bypass Lock for Testing</span>
-                  </button>
+                  {isAdminLoggedIn && (
+                    <button
+                      type="button"
+                      onClick={() => setDemoBypass(true)}
+                      className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-bold text-xs hover:opacity-90 transition-all cursor-pointer flex items-center gap-1.5 shadow-xs"
+                    >
+                      <Unlock className="w-3.5 h-3.5" />
+                      <span>Admin Bypass Lock for Testing</span>
+                    </button>
+                  )}
                   {currentDay > 1 && (
                     <button
                       type="button"
@@ -607,6 +609,7 @@ export function App() {
                 progress={progress}
                 istStatus={istStatus}
                 demoBypass={demoBypass}
+                onSelectDay={(day) => setCurrentDay(day)}
                 onToggleQuestion={handleToggleQuestion}
                 onOpenPreAssessment={() =>
                   requireAuth(() =>

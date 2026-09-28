@@ -180,10 +180,18 @@ export function isDayUnlockedStrict(
     return { unlocked: true };
   }
 
-  // 5. Days 2 to 5 strictly require ALL sections of Day N-1
+  // 5. Days 2 to 5 strictly require previous day to be unlocked and 100% completed
   const prevDay = dayNumber - 1;
-  const prevStatus = checkDayCompletion(prevDay, progress);
+  const prevUnlock = isDayUnlockedStrict(prevDay, progress, istStatus, demoBypass, userEmailOrId);
+  if (!prevUnlock.unlocked) {
+    return {
+      unlocked: false,
+      missingDay: prevDay,
+      reason: `Day ${dayNumber} is strictly inaccessible because previous Day ${prevDay} is locked. Learners cannot access a day while any previous day remains locked.`,
+    };
+  }
 
+  const prevStatus = checkDayCompletion(prevDay, progress);
   if (!prevStatus.isComplete) {
     return {
       unlocked: false,

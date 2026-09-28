@@ -352,9 +352,9 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
                         </div>
                         <div className="flex items-center justify-between text-[9px] pt-0.5">
                           <span className="text-emerald-400 font-mono font-bold">
-                            {SOLVED_PROGRAMS.filter((p) => p.day === item.day && (progress.acknowledgedSolvedProgramIds || []).includes(p.id)).length}/6 Solved
+                            {SOLVED_PROGRAMS.filter((p) => p.day === item.day && (progress.acknowledgedSolvedProgramIds || []).includes(p.id)).length}/5 Solved
                           </span>
-                          <span className="text-slate-500 font-mono">2E • 2M • 2H</span>
+                          <span className="text-slate-500 font-mono">2E • 2M • 1H (5 Solved)</span>
                         </div>
                       </div>
                     )}

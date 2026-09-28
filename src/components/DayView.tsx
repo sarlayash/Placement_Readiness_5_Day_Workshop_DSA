@@ -20,6 +20,8 @@ import {
   AlertCircle,
   MessageSquare,
   Sliders,
+  ArrowLeft,
+  ShieldAlert,
 } from 'lucide-react';
 import { HACKERRANK_COURSE_URL } from '../data/curriculum';
 import { SOLVED_PROGRAMS } from '../data/solvedPrograms';
@@ -31,6 +33,7 @@ interface DayViewProps {
   progress: UserProgress;
   istStatus: ISTStatus;
   demoBypass: boolean;
+  onSelectDay?: (day: number) => void;
   onToggleQuestion: (questionId: string) => void;
   onOpenPreAssessment: () => void;
   onOpenPostAssessment: () => void;
@@ -53,6 +56,7 @@ export const DayView: React.FC<DayViewProps> = ({
   progress,
   istStatus,
   demoBypass,
+  onSelectDay,
   onToggleQuestion,
   onOpenPreAssessment,
   onOpenPostAssessment,
@@ -101,6 +105,101 @@ export const DayView: React.FC<DayViewProps> = ({
     setExpandedQuestionId((prev) => (prev === id ? null : id));
   };
 
+  // STRICT INACCESSIBLE DAY SCREEN: When a day is locked or relocked, learners cannot view its questions or assessments
+  if (!lockResult.unlocked) {
+    return (
+      <div className="space-y-6 max-w-4xl mx-auto py-8 px-4 animate-fadeIn">
+        <div className="rounded-3xl border-2 border-rose-300 bg-gradient-to-br from-rose-50 via-white to-amber-50/40 p-8 text-center space-y-6 shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-rose-500 via-red-500 to-amber-500" />
+
+          {/* Big Lock Icon with Halo */}
+          <div className="mx-auto w-20 h-20 rounded-3xl bg-rose-100 border-2 border-rose-300 flex items-center justify-center text-rose-600 shadow-inner">
+            <Lock className="w-10 h-10" />
+          </div>
+
+          <div className="space-y-2 max-w-xl mx-auto">
+            <span className="inline-block px-3 py-1 rounded-full bg-rose-100 text-rose-800 text-xs font-mono font-bold uppercase tracking-wider border border-rose-200">
+              Access Restricted • Strict Day Lock
+            </span>
+            <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
+              {lockResult.adminOverridden ? `Day ${day} Relocked by Admin Kapil` : `Day ${day} Content is Strictly Inaccessible`}
+            </h1>
+            <p className="text-xs md:text-sm text-rose-700 font-medium bg-rose-50/90 p-4 rounded-2xl border border-rose-200 leading-relaxed">
+              {lockResult.reason || `You must complete all prerequisite assessments and coding problems from previous days to unlock Day ${day}.`}
+            </p>
+          </div>
+
+          {/* Prerequisite Steps Required */}
+          <div className="max-w-2xl mx-auto bg-white rounded-2xl border border-slate-200 p-6 text-left space-y-4 shadow-xs">
+            <div className="flex items-center gap-2 font-bold text-slate-800 text-sm">
+              <ShieldAlert className="w-4 h-4 text-rose-500" />
+              <span>Learner Completion Checklist for Day {day - 1}:</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div className="p-3.5 rounded-xl border border-slate-100 bg-slate-50 flex items-start gap-2.5">
+                <span className="font-mono font-black text-indigo-600 shrink-0 text-sm">1.</span>
+                <div>
+                  <div className="font-bold text-slate-800">Pre-Assessment</div>
+                  <div className="text-[11px] text-slate-500">10 MCQs on Day {day - 1} fundamentals</div>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-xl border border-slate-100 bg-slate-50 flex items-start gap-2.5">
+                <span className="font-mono font-black text-emerald-600 shrink-0 text-sm">2.</span>
+                <div>
+                  <div className="font-bold text-slate-800">5 Solved Practice Questions</div>
+                  <div className="text-[11px] text-slate-500">Acknowledge all 5 exemplar codes</div>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-xl border border-slate-100 bg-slate-50 flex items-start gap-2.5">
+                <span className="font-mono font-black text-amber-600 shrink-0 text-sm">3.</span>
+                <div>
+                  <div className="font-bold text-slate-800">Guided Syllabus Problems</div>
+                  <div className="text-[11px] text-slate-500">Solve in-class & post-class tasks</div>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-xl border border-slate-100 bg-slate-50 flex items-start gap-2.5">
+                <span className="font-mono font-black text-purple-600 shrink-0 text-sm">4.</span>
+                <div>
+                  <div className="font-bold text-slate-800">Post-Assessment (&ge; 70%)</div>
+                  <div className="text-[11px] text-slate-500">10 MCQs to win Day {day - 1} Badge</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Navigation Controls */}
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            {day > 1 && onSelectDay && (
+              <button
+                type="button"
+                onClick={() => onSelectDay(day - 1)}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Go to Day {day - 1} to Complete Prerequisites</span>
+              </button>
+            )}
+
+            {isAdmin && onOpenAdmin && (
+              <button
+                type="button"
+                onClick={onOpenAdmin}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs shadow-md transition-all cursor-pointer"
+              >
+                <Unlock className="w-4 h-4" />
+                <span>Unlock Day {day} via Admin Panel</span>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-12">
       {/* Admin Override Alert Banner */}
@@ -115,31 +214,6 @@ export const DayView: React.FC<DayViewProps> = ({
           <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold border border-amber-500/30 whitespace-nowrap">
             Admin Unlocked ✓
           </span>
-        </div>
-      )}
-
-      {/* Relocked / Locked Alert Banner if day is locked */}
-      {!lockResult.unlocked && (
-        <div className="p-4 rounded-2xl bg-rose-950/40 border border-rose-500/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-rose-200 text-xs shadow-md animate-fadeIn">
-          <div className="flex items-center gap-2.5">
-            <Lock className="w-5 h-5 text-rose-400 shrink-0" />
-            <div>
-              <div className="font-extrabold text-rose-300 text-sm">
-                {lockResult.adminOverridden ? `Day ${day} Relocked by Admin Kapil` : `Day ${day} Access Locked`}
-              </div>
-              <div className="text-[11px] text-rose-300/80 mt-0.5">
-                {lockResult.reason || `You must complete all steps of Day ${day - 1} to unlock this day.`}
-              </div>
-            </div>
-          </div>
-          {isAdmin && onOpenAdmin && (
-            <button
-              onClick={onOpenAdmin}
-              className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shrink-0 cursor-pointer shadow"
-            >
-              Unlock in Admin Panel
-            </button>
-          )}
         </div>
       )}
 
@@ -178,7 +252,7 @@ export const DayView: React.FC<DayViewProps> = ({
             <div className="p-3 rounded-2xl border border-emerald-200 bg-emerald-50/70 text-right">
               <div className="text-[10px] uppercase font-bold text-emerald-700">Solved Exemplars</div>
               <div className="text-sm font-mono font-extrabold text-emerald-900">
-                {SOLVED_PROGRAMS.filter((p) => p.day === day && (progress.acknowledgedSolvedProgramIds || []).includes(p.id)).length} / 6 Done
+                {SOLVED_PROGRAMS.filter((p) => p.day === day && (progress.acknowledgedSolvedProgramIds || []).includes(p.id)).length} / 5 Done
               </div>
             </div>
 
@@ -230,7 +304,7 @@ export const DayView: React.FC<DayViewProps> = ({
               <p className="text-[11px] text-slate-500">
                 {prePassed
                   ? `Completed with score: ${preScore}%`
-                  : '5 MCQs to evaluate fundamentals prior to coding'}
+                  : `10 MCQs based on Day ${day} fundamentals prior to coding`}
               </p>
             </div>
 
@@ -259,7 +333,7 @@ export const DayView: React.FC<DayViewProps> = ({
               <p className="text-[11px] text-slate-500">
                 {postPassed
                   ? `Badge Qualified: ${postScore}% score`
-                  : 'Score >= 70% to unlock today\'s Placement Badge'}
+                  : `10 MCQs based on Day ${day} concepts (Score >= 70% to qualify for badge)`}
               </p>
             </div>
 
@@ -360,11 +434,11 @@ export const DayView: React.FC<DayViewProps> = ({
             }`}
           >
             <FileCheck2 className="w-4 h-4 text-amber-300" />
-            <span>6 Solved Programs (2 Easy • 2 Med • 2 Hard)</span>
+            <span>5 Coding Solved Practice Questions (2 Easy • 2 Med • 1 Hard)</span>
             <span className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold ${
               activeMainView === 'solved' ? 'bg-emerald-700 text-white' : 'bg-emerald-100 text-emerald-800'
             }`}>
-              {SOLVED_PROGRAMS.filter((p) => p.day === day && (progress.acknowledgedSolvedProgramIds || []).includes(p.id)).length}/6 Done
+              {SOLVED_PROGRAMS.filter((p) => p.day === day && (progress.acknowledgedSolvedProgramIds || []).includes(p.id)).length}/5 Done
             </span>
           </button>
 
@@ -541,7 +615,7 @@ export const DayView: React.FC<DayViewProps> = ({
       </div>
       )}
 
-      {/* 6 Solved Programs Masterclass (2 Easy • 2 Medium • 2 Hard) */}
+      {/* 5 Coding Solved Practice Questions (2 Easy • 2 Medium • 1 Hard) */}
       {(activeMainView === 'solved' || activeMainView === 'all') && (
         <SolvedProgramsSection
           day={day}

@@ -57,12 +57,12 @@ assert(curriculumRaw.includes('HACKERRANK_COURSE_URL'), 'HackerRank course link 
 
 const solvedProgramsRaw = fs.readFileSync(path.join(__dirname, 'src/data/solvedPrograms.ts'), 'utf8');
 const solvedMatches = solvedProgramsRaw.match(/id:\s*'[dD]\d-[emh]\d'/g) || [];
-assert(solvedMatches.length === 30, `Exactly 30 solved programs exist (found ${solvedMatches.length})`);
+assert(solvedMatches.length === 25, `Exactly 25 solved programs exist (found ${solvedMatches.length})`);
 
-// 6 per day: 2 Easy, 2 Medium, 2 Hard
+// 5 per day: 2 Easy, 2 Medium, 1 Hard
 for (let d = 1; d <= 5; d++) {
   const dayOccurrences = (solvedProgramsRaw.match(new RegExp(`day:\\s*${d},`, 'g')) || []).length;
-  assert(dayOccurrences === 6, `Day ${d} has exactly 6 solved programs (found ${dayOccurrences})`);
+  assert(dayOccurrences === 5, `Day ${d} has exactly 5 solved programs (found ${dayOccurrences})`);
 }
 
 const aptitudeRaw = fs.readFileSync(path.join(__dirname, 'src/data/aptitudeMCQs.ts'), 'utf8');

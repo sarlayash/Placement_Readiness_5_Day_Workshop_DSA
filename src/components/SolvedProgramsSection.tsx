@@ -107,14 +107,14 @@ export const SolvedProgramsSection: React.FC<SolvedProgramsSectionProps> = ({
                 Step 2 • Placement Exemplars
               </span>
               <span className="text-xs text-slate-500 font-semibold">
-                6 Solved Programs (2 Easy • 2 Medium • 2 Hard)
+                5 Coding Solved Practice Questions (2 Easy • 2 Medium • 1 Hard)
               </span>
             </div>
             <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight rainbow-text">
               Day {day} Kapil&apos;s Solved Programs Masterclass
             </h2>
             <p className="text-xs md:text-sm text-slate-600 max-w-2xl leading-relaxed">
-              Study the 6 benchmark solutions with production-grade implementations in <strong>C, C++, Java, Python, HTML, and JavaScript</strong>. Acknowledge each program as complete after verifying the logic, time complexity invariants, and edge cases.
+              Study the 5 benchmark solutions with production-grade implementations in <strong>C, C++, Java, Python, HTML, and JavaScript</strong>. Acknowledge each program as complete after verifying the logic, time complexity invariants, and edge cases.
             </p>
           </div>
 
@@ -137,7 +137,7 @@ export const SolvedProgramsSection: React.FC<SolvedProgramsSectionProps> = ({
             {isAllAcknowledged && (
               <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-200">
                 <Award className="w-3.5 h-3.5 text-amber-500" />
-                All 6 Mastered & Acknowledged!
+                All 5 Solved Questions Mastered & Acknowledged!
               </span>
             )}
           </div>

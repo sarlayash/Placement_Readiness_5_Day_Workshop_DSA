@@ -71,7 +71,7 @@ languages.forEach((lang) => {
 // -------------------------------------------------------------------------
 // 2. AUDIT DAILY ASSESSMENTS (PRE & POST ASSESSMENTS FOR DAYS 1 TO 5)
 // -------------------------------------------------------------------------
-console.log('\n--- 2. AUDITING PRE & POST ASSESSMENTS (50 TOTAL MCQS) ---');
+console.log('\n--- 2. AUDITING PRE & POST ASSESSMENTS (100 TOTAL MCQS: 10 PRE + 10 POST PER DAY) ---');
 for (let d = 1; d <= 5; d++) {
   assert(
     curriculumContent.includes(`day: ${d},`) &&
@@ -83,14 +83,14 @@ for (let d = 1; d <= 5; d++) {
 
 const assessmentQuestionMatches = curriculumContent.match(/correctAnswer:\s*[0-3]/g) || [];
 assert(
-  assessmentQuestionMatches.length >= 50,
-  `At least 50 assessment questions exist with valid 0-3 answer indices (found ${assessmentQuestionMatches.length})`
+  assessmentQuestionMatches.length >= 100,
+  `At least 100 assessment questions exist with valid 0-3 answer indices (found ${assessmentQuestionMatches.length})`
 );
 
 // -------------------------------------------------------------------------
-// 3. AUDIT 30 SOLVED PROGRAMS (6 PER DAY: 2 EASY, 2 MEDIUM, 2 HARD)
+// 3. AUDIT 25 SOLVED PROGRAMS (5 PER DAY: 2 EASY, 2 MEDIUM, 1 HARD)
 // -------------------------------------------------------------------------
-console.log('\n--- 3. AUDITING 30 SOLVED PROGRAMS (2E • 2M • 2H PER DAY) ---');
+console.log('\n--- 3. AUDITING 25 SOLVED PROGRAMS (2E • 2M • 1H PER DAY) ---');
 const solvedFilePath = path.join(__dirname, 'src/data/solvedPrograms.ts');
 assert(fs.existsSync(solvedFilePath), 'solvedPrograms.ts file exists');
 const solvedContent = fs.readFileSync(solvedFilePath, 'utf8');
@@ -98,8 +98,8 @@ const solvedContent = fs.readFileSync(solvedFilePath, 'utf8');
 for (let d = 1; d <= 5; d++) {
   const dayPrograms = solvedContent.match(new RegExp(`day:\\s*${d},`, 'g')) || [];
   assert(
-    dayPrograms.length === 6,
-    `Day ${d} has exactly 6 solved masterclass programs (found ${dayPrograms.length})`
+    dayPrograms.length === 5,
+    `Day ${d} has exactly 5 solved masterclass programs (found ${dayPrograms.length})`
   );
 }
 
