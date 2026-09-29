@@ -114,6 +114,9 @@ export interface UserProgress {
   dayPostAssessmentPassed: Record<number, boolean>;
   dayPreAssessmentScores: Record<number, number>;
   dayPostAssessmentScores: Record<number, number>;
+  dayFinalExamPassed?: Record<number, boolean>;
+  dayFinalExamScores?: Record<number, number>;
+  dayFinalExamDates?: Record<number, string>;
   badgesUnlocked: Record<number, boolean>;
   finalExamPassed: boolean;
   finalExamScore: number;

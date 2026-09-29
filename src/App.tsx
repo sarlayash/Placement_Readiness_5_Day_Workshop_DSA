@@ -93,6 +93,7 @@ export function App() {
     type: 'pre' | 'post';
   } | null>(null);
   const [showProctoredExam, setShowProctoredExam] = useState<boolean>(false);
+  const [activeProctoredExamDay, setActiveProctoredExamDay] = useState<number>(1);
   const [showCertificate, setShowCertificate] = useState<boolean>(false);
   const [showBadgeGallery, setShowBadgeGallery] = useState<boolean>(false);
   const [showLevelZeroModal, setShowLevelZeroModal] = useState<boolean>(false);
@@ -296,14 +297,29 @@ export function App() {
     });
   };
 
-  // Complete Final Proctored Exam
+  // Complete Daily Proctored Final Assessment (25 MCQs • Aptitude + DSA)
   const handleFinalExamComplete = (scorePercentage: number, passed: boolean) => {
+    const day = activeProctoredExamDay;
     setProgress((prev) => {
       const newProgress = { ...prev };
-      newProgress.finalExamPassed = passed;
-      newProgress.finalExamScore = scorePercentage;
+      newProgress.dayFinalExamPassed = {
+        ...(newProgress.dayFinalExamPassed || {}),
+        [day]: passed,
+      };
+      newProgress.dayFinalExamScores = {
+        ...(newProgress.dayFinalExamScores || {}),
+        [day]: scorePercentage,
+      };
+      newProgress.dayFinalExamDates = {
+        ...(newProgress.dayFinalExamDates || {}),
+        [day]: new Date().toISOString(),
+      };
       if (passed) {
-        newProgress.badgesUnlocked[5] = true;
+        newProgress.badgesUnlocked[day] = true;
+      }
+      if (day === 5 && passed) {
+        newProgress.finalExamPassed = true;
+        newProgress.finalExamScore = scorePercentage;
         newProgress.finalExamDate = new Date().toISOString();
         if (!newProgress.certificateId && googleUser) {
           newProgress.certificateId = generateCertificateId(googleUser.name);
@@ -392,15 +408,11 @@ export function App() {
     setSimulatedDate(null);
   };
 
-  // Strict Final Exam Gatekeeper (Day 5 Proctored Exam requires 100% completion of Days 1 to 5)
-  const handleOpenFinalExam = () => {
+  // Proctored Exam Gatekeeper for Days 1 to 5 (25 MCQs, Aptitude + DSA, 30 Min Timer, No Camera)
+  const handleOpenFinalExam = (day = currentDay) => {
+    setActiveProctoredExamDay(day);
     requireAuth(() => {
-      const eligibility = checkFinalExamEligibility(progress, demoBypass);
-      if (!eligibility.isEligible) {
-        setShowPrerequisitesModal(true);
-      } else {
-        setShowProctoredExam(true);
-      }
+      setShowProctoredExam(true);
     });
   };
 
@@ -702,9 +714,10 @@ export function App() {
         />
       )}
 
-      {/* Proctored Final Exam Modal */}
+      {/* Proctored Final Exam Modal (25 MCQs • Aptitude + DSA • 30 Mins • No Camera) */}
       {showProctoredExam && googleUser && (
         <ProctoredExamModal
+          day={activeProctoredExamDay}
           userName={googleUser.name}
           onComplete={handleFinalExamComplete}
           onClose={() => setShowProctoredExam(false)}

@@ -12,6 +12,7 @@
     "test": "node test-journey.js",
     "test:audit": "node test-all-modules.js",
     "test:admin": "node test-admin-portal.js",
+    "test:exams": "node test-daily-final-assessments.js",
     "preview": "vite preview"
   },
   "dependencies": {

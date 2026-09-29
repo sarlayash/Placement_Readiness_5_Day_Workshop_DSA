@@ -354,7 +354,9 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
                           <span className="text-emerald-400 font-mono font-bold">
                             {SOLVED_PROGRAMS.filter((p) => p.day === item.day && (progress.acknowledgedSolvedProgramIds || []).includes(p.id)).length}/5 Solved
                           </span>
-                          <span className="text-slate-500 font-mono">2E • 2M • 1H (5 Solved)</span>
+                          <span className={progress.dayFinalExamPassed?.[item.day] ? 'text-indigo-300 font-bold' : 'text-slate-500 font-mono'}>
+                            {progress.dayFinalExamPassed?.[item.day] ? `Exam: ${progress.dayFinalExamScores?.[item.day]}% ✓` : 'Exam: 25 MCQs'}
+                          </span>
                         </div>
                       </div>
                     )}
@@ -523,18 +525,18 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
             <button
               type="button"
               onClick={onOpenFinalExam}
-              title={isCollapsed ? 'Proctored Final Exam' : undefined}
+              title={isCollapsed ? `Day ${currentDay} Proctored Exam (25 MCQs)` : undefined}
               className={`w-full flex items-center rounded-xl border border-[#14264d] hover:bg-[#0e224d] text-slate-300 text-xs font-semibold transition-colors cursor-pointer ${
                 isCollapsed ? 'p-2 justify-center' : 'p-2.5 justify-between'
               }`}
             >
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-purple-400 shrink-0" />
-                {!isCollapsed && <span className="rainbow-text font-bold">Proctored Final Exam</span>}
+                {!isCollapsed && <span className="rainbow-text font-bold">Proctored Exam (25 MCQs)</span>}
               </div>
               {!isCollapsed && (
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#152a55] text-slate-300">
-                  {progress.finalExamPassed ? 'Cleared' : 'Day 5'}
+                  {progress.dayFinalExamPassed?.[currentDay] ? `D${currentDay} ✓` : `Day ${currentDay}`}
                 </span>
               )}
             </button>

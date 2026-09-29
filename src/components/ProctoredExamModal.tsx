@@ -1,61 +1,74 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { FINAL_PROCTORED_QUESTIONS } from '../data/curriculum';
+import React, { useState, useEffect } from 'react';
+import { getDailyFinalAssessment, DAY_FINAL_ASSESSMENT_INFO } from '../data/dailyFinalAssessments';
 import { ProctorLog } from '../types';
 import {
   ShieldAlert,
+  ShieldCheck,
   Maximize2,
   AlertTriangle,
   CheckCircle2,
   Clock,
-  Eye,
-  Camera,
   Activity,
   X,
+  Lock,
+  Check,
+  Brain,
+  Code2,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface ProctoredExamModalProps {
+  day?: number;
   userName: string;
   onComplete: (scorePercentage: number, passed: boolean) => void;
   onClose: () => void;
 }
 
 export const ProctoredExamModal: React.FC<ProctoredExamModalProps> = ({
+  day = 1,
   userName,
   onComplete,
   onClose,
 }) => {
+  const examDay = day;
+  const questions = getDailyFinalAssessment(examDay);
+  const examInfo = DAY_FINAL_ASSESSMENT_INFO[examDay] || {
+    title: `Day ${examDay} Proctored Final Assessment`,
+    syllabus: `Day ${examDay} Syllabus & Practice Questions`,
+    aptitudeCount: 10,
+    dsaCount: 15,
+  };
+
   const [hasStarted, setHasStarted] = useState<boolean>(false);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
   const [currentIdx, setCurrentIdx] = useState<number>(0);
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
-  const [timeLeftSeconds, setTimeLeftSeconds] = useState<number>(30 * 60); // 30 minutes
+  const [timeLeftSeconds, setTimeLeftSeconds] = useState<number>(30 * 60); // 30 minutes duration
   const [violations, setViolations] = useState<number>(0);
   const [proctorLogs, setProctorLogs] = useState<ProctorLog[]>([]);
-  const [cameraActive, setCameraActive] = useState<boolean>(false);
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
 
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+  const addLog = (message: string, severity: 'info' | 'warning' | 'critical') => {
+    const timestamp = new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' });
+    setProctorLogs((prev) => [{ timestamp, message, severity }, ...prev.slice(0, 15)]);
+  };
 
-  // Initialize camera and security listeners once started
+  const handleViolation = (reason: string) => {
+    setViolations((v) => {
+      const updated = v + 1;
+      addLog(`VIOLATION #${updated}: ${reason}`, 'warning');
+      setWarningMessage(`Proctor Alert: ${reason}. (Strike ${updated}/3)`);
+      setTimeout(() => setWarningMessage(null), 4000);
+      return updated;
+    });
+  };
+
+  // Initialize security listeners & 30-min countdown timer once started (No camera required)
   useEffect(() => {
     if (!hasStarted || isSubmitted) return;
 
-    // Start camera
-    navigator.mediaDevices?.getUserMedia({ video: true, audio: false })
-      .then((stream) => {
-        streamRef.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-        setCameraActive(true);
-        addLog('Webcam feed acquired & facial anchor locked.', 'info');
-      })
-      .catch(() => {
-        setCameraActive(false);
-        addLog('Webcam hardware unavailable. AI Simulated Optical Proctor initiated.', 'warning');
-      });
+    addLog('Browser Integrity Proctor engaged. No camera hardware required.', 'info');
+    addLog(`30-minute timer initiated for Day ${examDay} Final Assessment (25 MCQs).`, 'info');
 
     // Request fullscreen
     if (!document.fullscreenElement) {
@@ -85,7 +98,7 @@ export const ProctoredExamModal: React.FC<ProctoredExamModalProps> = ({
     window.addEventListener('blur', handleWindowBlur);
     document.addEventListener('fullscreenchange', handleFullscreenChange);
 
-    // Timer countdown
+    // Timer countdown (30 Minutes strict)
     const timerInterval = setInterval(() => {
       setTimeLeftSeconds((prev) => {
         if (prev <= 1) {
@@ -102,26 +115,8 @@ export const ProctoredExamModal: React.FC<ProctoredExamModalProps> = ({
       window.removeEventListener('blur', handleWindowBlur);
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
       clearInterval(timerInterval);
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((t) => t.stop());
-      }
     };
   }, [hasStarted, isSubmitted]);
-
-  const addLog = (message: string, severity: 'info' | 'warning' | 'critical') => {
-    const timestamp = new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' });
-    setProctorLogs((prev) => [{ timestamp, message, severity }, ...prev.slice(0, 15)]);
-  };
-
-  const handleViolation = (reason: string) => {
-    setViolations((v) => {
-      const updated = v + 1;
-      addLog(`VIOLATION #${updated}: ${reason}`, 'warning');
-      setWarningMessage(`Proctor Alert: ${reason}. (Strike ${updated}/3)`);
-      setTimeout(() => setWarningMessage(null), 4000);
-      return updated;
-    });
-  };
 
   const handleSelectOption = (qIdx: number, optIdx: number) => {
     if (isSubmitted) return;
@@ -133,20 +128,16 @@ export const ProctoredExamModal: React.FC<ProctoredExamModalProps> = ({
 
   const calculateScore = () => {
     let correct = 0;
-    FINAL_PROCTORED_QUESTIONS.forEach((q, idx) => {
+    questions.forEach((q, idx) => {
       if (selectedAnswers[idx] === q.correctAnswer) {
         correct++;
       }
     });
-    return Math.round((correct / FINAL_PROCTORED_QUESTIONS.length) * 100);
+    return Math.round((correct / questions.length) * 100);
   };
 
   const handleSubmit = () => {
     setIsSubmitted(true);
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => t.stop());
-    }
-
     const score = calculateScore();
     const passed = score >= 70 && violations <= 4;
 
@@ -170,6 +161,7 @@ export const ProctoredExamModal: React.FC<ProctoredExamModalProps> = ({
 
   const score = isSubmitted ? calculateScore() : 0;
   const passed = score >= 70 && violations <= 4;
+  const answeredCount = Object.keys(selectedAnswers).length;
 
   // LOBBY / PRE-EXAM BRIEFING
   if (!hasStarted) {
@@ -178,25 +170,41 @@ export const ProctoredExamModal: React.FC<ProctoredExamModalProps> = ({
         <div className="relative w-full max-w-xl rounded-3xl border border-slate-200 bg-white p-6 md:p-8 text-slate-800 shadow-2xl">
           <div className="text-center mb-6">
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white font-black flex items-center justify-center text-2xl mx-auto mb-3 shadow-md">
-              K
+              D{examDay}
             </div>
-            <h2 className="text-2xl md:text-3xl font-black rainbow-text">Final Proctored Placement Assessment</h2>
+            <h2 className="text-2xl md:text-3xl font-black rainbow-text">
+              Day {examDay} Proctored Final Assessment
+            </h2>
             <p className="text-xs text-slate-500 mt-1 uppercase tracking-widest font-extrabold">
-              Comprehensive Evaluation • Syllabus Topics T1 to T10
+              25 Questions • 10 Aptitude + 15 DSA • 30-Minute Timer
             </p>
           </div>
 
           <div className="space-y-4 rounded-2xl border border-indigo-100 bg-indigo-50/50 p-5 mb-6 text-xs text-slate-700">
             <div className="font-extrabold text-slate-900 flex items-center gap-2 text-sm rainbow-text">
               <ShieldAlert className="w-4 h-4 text-indigo-600" />
-              <span>Kapil Proctor Integrity Guidelines</span>
+              <span>Assessment & Proctoring Guidelines</span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-white border border-indigo-100 text-[11px] text-slate-600">
+              <span className="font-bold text-indigo-900">Syllabus Scope: </span>
+              {examInfo.syllabus}
             </div>
             <ul className="space-y-2 list-disc list-inside text-slate-600 font-medium">
-              <li><strong className="text-slate-900">10 Questions:</strong> Covering Graphs, Recursion, Two Pointers, Math, and Divide & Conquer.</li>
-              <li><strong className="text-slate-900">Time Limit:</strong> 30 Minutes countdown.</li>
-              <li><strong className="text-slate-900">Passing Threshold:</strong> Minimum 70% required to graduate and earn Certificate.</li>
-              <li><strong className="text-slate-900">Proctoring Enforcement:</strong> Fullscreen mode, optical face detection, and tab-switch monitoring are active. More than 4 violations will void your exam.</li>
-              <li><strong className="text-slate-900">Identity:</strong> Exam is bound to your verified Google Account ({userName}).</li>
+              <li>
+                <strong className="text-slate-900">25 Unique MCQs:</strong> 10 Quantitative/Logical Aptitude + 15 Data Structures & Algorithms tailored strictly to Day {examDay}.
+              </li>
+              <li>
+                <strong className="text-slate-900">30-Minute Duration:</strong> Strict timer countdown with automatic submission upon expiry.
+              </li>
+              <li>
+                <strong className="text-slate-900">70% Passing Threshold:</strong> Score at least 18/25 (70%) to qualify and earn credentials.
+              </li>
+              <li>
+                <strong className="text-slate-900">No Camera Required:</strong> Pure browser integrity proctoring (fullscreen sentry, window focus blur detection, and tab-switch monitoring).
+              </li>
+              <li>
+                <strong className="text-slate-900">Candidate Identity:</strong> Verified under your Google account ({userName}).
+              </li>
             </ul>
           </div>
 
@@ -225,16 +233,33 @@ export const ProctoredExamModal: React.FC<ProctoredExamModalProps> = ({
     );
   }
 
-  // ACTIVE EXAM OR SUBMITTED VIEW
+  // ACTIVE EXAM OR REVIEW VIEW
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-white text-slate-800 overflow-hidden">
+    <div
+      className="fixed inset-0 z-50 flex flex-col bg-white text-slate-800 overflow-hidden select-none"
+      onCopy={(e) => {
+        e.preventDefault();
+        handleViolation('Clipboard copy blocked by proctor');
+      }}
+      onPaste={(e) => {
+        e.preventDefault();
+        handleViolation('Clipboard paste blocked by proctor');
+      }}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        handleViolation('Context menu click blocked by proctor');
+      }}
+    >
       {/* Top Proctoring Bar */}
       <div className="h-16 border-b border-slate-200 bg-slate-50 px-4 flex items-center justify-between shrink-0 shadow-2xs">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping" />
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
             <span className="font-black text-sm uppercase tracking-wider rainbow-text">
               PROCTOR ACTIVE
+            </span>
+            <span className="hidden md:inline px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-[10px] font-mono font-bold">
+              Day {examDay} • 25 MCQs
             </span>
           </div>
           <span className="hidden sm:inline text-xs text-slate-500 border-l border-slate-200 pl-3">
@@ -242,15 +267,21 @@ export const ProctoredExamModal: React.FC<ProctoredExamModalProps> = ({
           </span>
         </div>
 
-        {/* Center Countdown Timer */}
+        {/* Center Countdown Timer (30 Mins) */}
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 bg-white font-mono text-sm text-slate-800 shadow-2xs">
           <Clock className="w-4 h-4 text-indigo-600" />
-          <span className={timeLeftSeconds < 300 ? 'text-rose-600 font-black animate-pulse' : 'font-bold'}>
+          <span
+            className={
+              timeLeftSeconds < 300
+                ? 'text-rose-600 font-black animate-pulse'
+                : 'font-bold'
+            }
+          >
             {formatTimer(timeLeftSeconds)}
           </span>
         </div>
 
-        {/* Violations Counter */}
+        {/* Violations Counter & Actions */}
         <div className="flex items-center gap-3">
           <div
             className={`flex items-center gap-1.5 px-3 py-1 rounded-xl border text-xs font-mono font-bold ${
@@ -297,16 +328,26 @@ export const ProctoredExamModal: React.FC<ProctoredExamModalProps> = ({
                     : 'border-rose-200 bg-rose-50/70 text-slate-800'
                 }`}
               >
-                <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto ${passed ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}`}>
+                <div
+                  className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto ${
+                    passed ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'
+                  }`}
+                >
                   {passed ? <CheckCircle2 className="w-8 h-8" /> : <X className="w-8 h-8" />}
                 </div>
                 <h3 className="text-2xl font-black rainbow-text">
-                  {passed ? 'Proctored Placement Certification Cleared!' : 'Proctored Exam Failed'}
+                  {passed
+                    ? `Day ${examDay} Proctored Assessment Cleared!`
+                    : `Day ${examDay} Assessment Not Cleared`}
                 </h3>
                 <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed font-medium">
                   {passed
-                    ? `Congratulations ${userName}! You scored ${score}% under proctored integrity. Your official Certificate of Completion powered by Kapil has been issued.`
-                    : `Score: ${score}%. Minimum required is 70% with <= 3 proctor strikes. Review syllabus materials and retry.`}
+                    ? `Congratulations ${userName}! You scored ${score}% (${Math.round(
+                        (score / 100) * questions.length
+                      )}/${questions.length} correct) under proctored integrity. Your Day ${examDay} assessment record is updated.`
+                    : `Score: ${score}% (${Math.round(
+                        (score / 100) * questions.length
+                      )}/${questions.length} correct). Minimum required is 70% with <= 3 strikes. Review the solutions below and retry.`}
                 </p>
                 <div className="pt-3">
                   <button
@@ -314,18 +355,25 @@ export const ProctoredExamModal: React.FC<ProctoredExamModalProps> = ({
                     onClick={onClose}
                     className="px-6 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white font-extrabold text-xs hover:opacity-90 transition-all shadow-md cursor-pointer"
                   >
-                    View Official Certificate
+                    Close & Return to Dashboard
                   </button>
                 </div>
               </div>
 
-              {/* Review all 10 questions */}
+              {/* Review all 25 questions */}
               <div className="space-y-4">
-                <h4 className="text-sm font-extrabold uppercase tracking-wider rainbow-text">
-                  Comprehensive Review
-                </h4>
-                {FINAL_PROCTORED_QUESTIONS.map((q, idx) => {
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-extrabold uppercase tracking-wider rainbow-text">
+                    Comprehensive Review (All 25 Questions)
+                  </h4>
+                  <span className="text-xs text-slate-500 font-mono">
+                    {Math.round((score / 100) * questions.length)} / {questions.length} Correct
+                  </span>
+                </div>
+
+                {questions.map((q, idx) => {
                   const isCorrect = selectedAnswers[idx] === q.correctAnswer;
+                  const isAptitude = idx < 10;
                   return (
                     <div
                       key={q.id}
@@ -336,14 +384,35 @@ export const ProctoredExamModal: React.FC<ProctoredExamModalProps> = ({
                       }`}
                     >
                       <div className="flex items-center justify-between text-slate-500 text-[11px] font-bold">
-                        <span>Question {idx + 1} • {q.topicTag}</span>
+                        <span className="flex items-center gap-1.5">
+                          <span
+                            className={`px-1.5 py-0.5 rounded text-[10px] font-mono ${
+                              isAptitude ? 'bg-amber-100 text-amber-800' : 'bg-indigo-100 text-indigo-800'
+                            }`}
+                          >
+                            {isAptitude ? 'Aptitude' : 'DSA'}
+                          </span>
+                          <span>Question {idx + 1} • {q.topicTag}</span>
+                        </span>
                         <span className={isCorrect ? 'text-emerald-700 font-bold' : 'text-rose-600 font-bold'}>
                           {isCorrect ? '✓ Correct' : '✗ Incorrect'}
                         </span>
                       </div>
                       <div className="font-bold text-slate-900 text-sm">{q.question}</div>
                       <div className="text-slate-600 pt-1">
-                        <strong className="text-slate-900">Kapil&apos;s Solution:</strong> {q.explanation}
+                        <strong className="text-slate-900">Your Answer: </strong>
+                        {selectedAnswers[idx] !== undefined
+                          ? q.options[selectedAnswers[idx]]
+                          : 'Not Attempted'}
+                      </div>
+                      {!isCorrect && (
+                        <div className="text-emerald-700">
+                          <strong>Correct Answer: </strong>
+                          {q.options[q.correctAnswer]}
+                        </div>
+                      )}
+                      <div className="text-slate-600 pt-1 border-t border-slate-200 mt-2">
+                        <strong className="text-slate-900">Explanation: </strong> {q.explanation}
                       </div>
                     </div>
                   );
@@ -353,42 +422,90 @@ export const ProctoredExamModal: React.FC<ProctoredExamModalProps> = ({
           ) : (
             // Active Question Engine
             <div className="space-y-6">
-              {/* Question Index Pills */}
-              <div className="flex items-center gap-2 overflow-x-auto pb-2">
-                {FINAL_PROCTORED_QUESTIONS.map((q, idx) => {
-                  const isAnswered = selectedAnswers[idx] !== undefined;
-                  const isCurrent = currentIdx === idx;
-                  return (
-                    <button
-                      key={q.id}
-                      type="button"
-                      onClick={() => setCurrentIdx(idx)}
-                      className={`w-9 h-9 rounded-xl font-mono text-xs font-bold flex items-center justify-center transition-all cursor-pointer ${
-                        isCurrent
-                          ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-300'
-                          : isAnswered
-                          ? 'bg-slate-200 text-slate-800'
-                          : 'bg-slate-100 text-slate-400 border border-slate-200'
-                      }`}
-                    >
-                      {idx + 1}
-                    </button>
-                  );
-                })}
+              {/* Question 1-25 Navigator Palette */}
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3 space-y-2">
+                <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
+                  <span className="flex items-center gap-2">
+                    <span className="text-indigo-600">Question Navigator (1 to 25)</span>
+                    <span className="text-slate-400">• Click to jump</span>
+                  </span>
+                  <span>
+                    Answered: <strong className="text-emerald-600">{answeredCount}</strong> / {questions.length}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-5 sm:grid-cols-10 md:grid-cols-13 lg:grid-cols-25 gap-1.5">
+                  {questions.map((q, idx) => {
+                    const isAnswered = selectedAnswers[idx] !== undefined;
+                    const isCurrent = currentIdx === idx;
+                    const isApt = idx < 10;
+                    return (
+                      <button
+                        key={q.id}
+                        type="button"
+                        onClick={() => setCurrentIdx(idx)}
+                        className={`h-8 rounded-lg font-mono text-xs font-bold flex items-center justify-center transition-all cursor-pointer ${
+                          isCurrent
+                            ? 'bg-indigo-600 text-white ring-2 ring-indigo-400 shadow-xs'
+                            : isAnswered
+                            ? 'bg-emerald-500 text-white hover:bg-emerald-600'
+                            : isApt
+                            ? 'bg-white text-slate-700 border border-amber-200 hover:bg-amber-50'
+                            : 'bg-white text-slate-700 border border-indigo-200 hover:bg-indigo-50'
+                        }`}
+                        title={`Q${idx + 1}: ${isApt ? 'Aptitude' : 'DSA'} (${isAnswered ? 'Answered' : 'Pending'})`}
+                      >
+                        {idx + 1}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="flex items-center gap-4 text-[10px] text-slate-500 pt-1 font-medium">
+                  <span className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded bg-emerald-500" /> Answered
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded bg-indigo-600" /> Current
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded border border-amber-300 bg-white" /> Aptitude (1-10)
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded border border-indigo-300 bg-white" /> DSA (11-25)
+                  </span>
+                </div>
               </div>
 
-              {/* Question Body */}
+              {/* Question Body Card */}
               <div className="rounded-3xl border border-slate-200 bg-white p-6 md:p-8 space-y-4 shadow-sm">
-                <div className="text-xs font-mono font-bold uppercase tracking-wider text-indigo-600">
-                  Question {currentIdx + 1} of {FINAL_PROCTORED_QUESTIONS.length} • {FINAL_PROCTORED_QUESTIONS[currentIdx].topicTag}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase ${
+                        currentIdx < 10
+                          ? 'bg-amber-100 text-amber-800'
+                          : 'bg-indigo-100 text-indigo-800'
+                      }`}
+                    >
+                      {currentIdx < 10 ? 'Part A: Aptitude' : 'Part B: DSA'}
+                    </span>
+                    <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500">
+                      Question {currentIdx + 1} of {questions.length}
+                    </span>
+                  </div>
+                  <span className="text-xs font-semibold text-slate-500">
+                    {questions[currentIdx].topicTag}
+                  </span>
                 </div>
+
                 <h3 className="text-base md:text-lg font-bold text-slate-900 leading-relaxed">
-                  {FINAL_PROCTORED_QUESTIONS[currentIdx].question}
+                  {questions[currentIdx].question}
                 </h3>
 
-                {/* Options */}
+                {/* Options List */}
                 <div className="space-y-2.5 pt-2">
-                  {FINAL_PROCTORED_QUESTIONS[currentIdx].options.map((opt, optIdx) => {
+                  {questions[currentIdx].options.map((opt, optIdx) => {
                     const isSelected = selectedAnswers[currentIdx] === optIdx;
                     return (
                       <button
@@ -397,11 +514,17 @@ export const ProctoredExamModal: React.FC<ProctoredExamModalProps> = ({
                         onClick={() => handleSelectOption(currentIdx, optIdx)}
                         className={`w-full text-left p-4 rounded-2xl border transition-all flex items-start gap-3 cursor-pointer ${
                           isSelected
-                            ? 'border-indigo-400 bg-indigo-50/70 text-indigo-950 font-bold ring-1 ring-indigo-300 shadow-2xs'
+                            ? 'border-indigo-500 bg-indigo-50/70 text-indigo-950 font-bold ring-2 ring-indigo-300 shadow-2xs'
                             : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100/70 text-slate-700'
                         }`}
                       >
-                        <span className="w-5 h-5 rounded-full border border-slate-300 flex items-center justify-center text-xs font-mono font-bold shrink-0 mt-0.5 text-slate-500">
+                        <span
+                          className={`w-6 h-6 rounded-full border flex items-center justify-center text-xs font-mono font-bold shrink-0 mt-0.5 ${
+                            isSelected
+                              ? 'border-indigo-600 bg-indigo-600 text-white'
+                              : 'border-slate-300 text-slate-500 bg-white'
+                          }`}
+                        >
                           {String.fromCharCode(65 + optIdx)}
                         </span>
                         <span className="text-xs md:text-sm leading-snug">{opt}</span>
@@ -411,24 +534,24 @@ export const ProctoredExamModal: React.FC<ProctoredExamModalProps> = ({
                 </div>
               </div>
 
-              {/* Question Navigation */}
+              {/* Navigation Controls */}
               <div className="flex items-center justify-between pt-2">
                 <button
                   type="button"
                   onClick={() => setCurrentIdx((p) => Math.max(0, p - 1))}
                   disabled={currentIdx === 0}
-                  className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:text-slate-900 disabled:opacity-40 text-xs font-bold"
+                  className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:text-slate-900 disabled:opacity-40 text-xs font-bold cursor-pointer"
                 >
                   ← Previous
                 </button>
                 <div className="text-xs text-slate-500 font-medium">
-                  {Object.keys(selectedAnswers).length} of {FINAL_PROCTORED_QUESTIONS.length} Questions Answered
+                  {answeredCount} of {questions.length} Questions Answered
                 </div>
-                {currentIdx < FINAL_PROCTORED_QUESTIONS.length - 1 ? (
+                {currentIdx < questions.length - 1 ? (
                   <button
                     type="button"
-                    onClick={() => setCurrentIdx((p) => Math.min(FINAL_PROCTORED_QUESTIONS.length - 1, p + 1))}
-                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-xs hover:opacity-90 transition-all shadow-xs cursor-pointer"
+                    onClick={() => setCurrentIdx((p) => Math.min(questions.length - 1, p + 1))}
+                    className="px-5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-xs hover:opacity-90 transition-all shadow-xs cursor-pointer"
                   >
                     Next →
                   </button>
@@ -436,9 +559,9 @@ export const ProctoredExamModal: React.FC<ProctoredExamModalProps> = ({
                   <button
                     type="button"
                     onClick={handleSubmit}
-                    className="px-6 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black text-xs hover:opacity-90 transition-all shadow-md cursor-pointer"
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black text-xs hover:opacity-90 transition-all shadow-md cursor-pointer"
                   >
-                    Submit Proctored Exam
+                    Submit 25-MCQ Assessment
                   </button>
                 )}
               </div>
@@ -446,35 +569,56 @@ export const ProctoredExamModal: React.FC<ProctoredExamModalProps> = ({
           )}
         </div>
 
-        {/* Right: Proctor Telemetry Sidecar */}
+        {/* Right: Proctor Telemetry Sidecar (No Camera Needed) */}
         <div className="hidden lg:flex w-80 border-l border-slate-200 bg-slate-50 flex-col p-4 space-y-4 shrink-0">
           <div className="space-y-1">
             <span className="text-xs font-black uppercase tracking-wider rainbow-text flex items-center gap-1.5">
-              <Camera className="w-4 h-4 text-indigo-600" />
-              <span>Optical Feed Preview</span>
+              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+              <span>Browser Integrity Proctor</span>
             </span>
-            <span className="text-[10px] text-slate-500 font-medium">Facial tracking anchor locked</span>
+            <span className="text-[10px] text-slate-500 font-medium">
+              Hardware Camera: Not Required (AI Browser Sentry Active)
+            </span>
           </div>
 
-          {/* Live Video Box */}
-          <div className="relative w-full h-44 rounded-2xl border border-slate-300 bg-slate-900 overflow-hidden flex items-center justify-center">
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className={`w-full h-full object-cover transform -scale-x-100 ${!cameraActive && 'hidden'}`}
-            />
-            {!cameraActive && (
-              <div className="text-center p-3 space-y-2">
-                <Eye className="w-8 h-8 text-slate-400 mx-auto animate-pulse" />
-                <div className="text-xs text-slate-300 font-bold">AI Simulated Eye-Tracker</div>
-                <div className="text-[10px] text-slate-400">Face: Center • Gaze: Screen</div>
-              </div>
-            )}
-            <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-black/60 border border-slate-600 text-[10px] font-mono text-white flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
-              LIVE
+          {/* Sentry Status Panel */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-3.5 space-y-2.5 shadow-2xs">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-500 font-semibold">Fullscreen Mode:</span>
+              <span className="text-emerald-700 font-mono font-bold flex items-center gap-1">
+                <Check className="w-3 h-3" /> Enforced
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-500 font-semibold">Tab Switch Sentry:</span>
+              <span className="text-emerald-700 font-mono font-bold flex items-center gap-1">
+                <Check className="w-3 h-3" /> Active
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-500 font-semibold">Clipboard Shield:</span>
+              <span className="text-emerald-700 font-mono font-bold flex items-center gap-1">
+                <Check className="w-3 h-3" /> Protected
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-500 font-semibold">Timer Duration:</span>
+              <span className="text-indigo-700 font-mono font-bold">30 Minutes</span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-500 font-semibold">Passing Threshold:</span>
+              <span className="text-indigo-700 font-mono font-bold">70% (18/25)</span>
+            </div>
+          </div>
+
+          {/* Candidate Info Card */}
+          <div className="rounded-2xl border border-indigo-100 bg-indigo-50/50 p-3 space-y-1">
+            <div className="text-[10px] font-mono text-indigo-700 uppercase font-bold">
+              Verified Candidate
+            </div>
+            <div className="text-xs font-bold text-slate-900 truncate">{userName}</div>
+            <div className="text-[10px] text-slate-500">
+              Exam: Day {examDay} Final Assessment (25 MCQs)
             </div>
           </div>
 

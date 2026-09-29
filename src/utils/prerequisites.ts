@@ -163,52 +163,14 @@ export function isDayUnlockedStrict(
     };
   }
 
-  if (demoBypass) {
-    return { unlocked: true };
-  }
-
-  // 3. Check IST Time Window Lock
-  if (!istStatus.isWithinActiveWindow) {
-    return {
-      unlocked: false,
-      reason: `Placement platform is locked outside active hours (08:00 AM - 08:00 PM IST). Daily lock reopens at 08:00 AM IST.`,
-    };
-  }
-
-  // 4. Day 1 is always unlocked during active IST window
-  if (dayNumber === 1) {
-    return { unlocked: true };
-  }
-
-  // 5. Days 2 to 5 strictly require previous day to be unlocked and 100% completed
-  const prevDay = dayNumber - 1;
-  const prevUnlock = isDayUnlockedStrict(prevDay, progress, istStatus, demoBypass, userEmailOrId);
-  if (!prevUnlock.unlocked) {
-    return {
-      unlocked: false,
-      missingDay: prevDay,
-      reason: `Day ${dayNumber} is strictly inaccessible because previous Day ${prevDay} is locked. Learners cannot access a day while any previous day remains locked.`,
-    };
-  }
-
-  const prevStatus = checkDayCompletion(prevDay, progress);
-  if (!prevStatus.isComplete) {
-    return {
-      unlocked: false,
-      missingDay: prevDay,
-      missingTasks: prevStatus.missingTasks,
-      reason: `Day ${dayNumber} is strictly locked. You must complete ALL sections of Day ${prevDay} (${prevStatus.missingTasks.join(
-        ', '
-      )}) to unlock this day.`,
-    };
-  }
-
+  // ALL DAYS 1 TO 5 ARE UNLOCKED BY DEFAULT
+  // Learners can navigate freely across all days and attempt daily assessments
   return { unlocked: true };
 }
 
 /**
- * Checks if learner is eligible to start the Day 5 Final Proctored Exam.
- * STRICT RULE: Final Assessment will NOT unlock unless ALL Days 1 through 5 tasks are 100% completed.
+ * Checks if learner is eligible to start Proctored Exams.
+ * All days from 1 to 5 are unlocked for proctored assessment.
  */
 export function checkFinalExamEligibility(
   progress: UserProgress,
@@ -223,8 +185,8 @@ export function checkFinalExamEligibility(
     totalTasksRemaining += status.missingTasks.length;
   });
 
-  const allCompleted = dayStatuses.every((s) => s.isComplete);
-  const isEligible = demoBypass || allCompleted;
+  // Fully unlocked and accessible for all learners
+  const isEligible = true;
 
   return {
     isEligible,

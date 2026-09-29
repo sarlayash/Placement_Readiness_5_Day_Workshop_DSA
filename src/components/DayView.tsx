@@ -37,7 +37,7 @@ interface DayViewProps {
   onToggleQuestion: (questionId: string) => void;
   onOpenPreAssessment: () => void;
   onOpenPostAssessment: () => void;
-  onOpenFinalExam: () => void;
+  onOpenFinalExam: (day?: number) => void;
   onOpenCertificate: () => void;
   onOpenIDE: (question: Question) => void;
   onToggleAcknowledgeProgram: (programId: string) => void;
@@ -95,6 +95,8 @@ export const DayView: React.FC<DayViewProps> = ({
   const postPassed = !!progress.dayPostAssessmentPassed[day];
   const postScore = progress.dayPostAssessmentScores[day] || 0;
   const badgeUnlocked = !!progress.badgesUnlocked[day];
+  const dayFinalScore = progress.dayFinalExamScores?.[day];
+  const dayFinalPassed = !!progress.dayFinalExamPassed?.[day];
 
   const totalQuestionsInDay = topics.reduce((acc, t) => acc + t.questions.length, 0);
   const completedQuestionsInDay = topics.reduce((acc, t) => {
@@ -347,6 +349,56 @@ export const DayView: React.FC<DayViewProps> = ({
               }`}
             >
               {postPassed ? 'Review' : 'Take Post-Test'}
+            </button>
+          </div>
+        </div>
+
+        {/* Day Final Proctored Assessment (25 MCQs: Aptitude + DSA • 30 Mins • No Camera) */}
+        <div className="p-4 md:p-5 rounded-2xl border-2 border-indigo-200 bg-gradient-to-r from-indigo-50/90 via-white to-purple-50/90 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-mono text-[10px] font-bold uppercase tracking-wider">
+                Day {day} Final Assessment
+              </span>
+              <span className="text-xs font-black text-slate-900 rainbow-text">
+                25 Proctored MCQs (10 Aptitude + 15 DSA)
+              </span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                ⏱️ 30 Mins • 🚫 No Camera Required
+              </span>
+            </div>
+            <p className="text-[11px] md:text-xs text-slate-600 leading-relaxed max-w-2xl">
+              Strict 30-minute browser integrity proctored exam testing Day {day} concepts ({topics.map((t) => t.name).join(' & ')}). 10 Quantitative/Logical Aptitude + 15 Data Structures & Algorithms. Minimum 70% required to clear.
+            </p>
+            {dayFinalScore !== undefined && (
+              <div className="text-xs font-bold pt-0.5">
+                {dayFinalPassed ? (
+                  <span className="text-emerald-700 flex items-center gap-1.5 font-bold">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    Passed with {dayFinalScore}% ✓
+                  </span>
+                ) : (
+                  <span className="text-rose-700 flex items-center gap-1.5 font-bold">
+                    <AlertCircle className="w-4 h-4 text-rose-600" />
+                    Score: {dayFinalScore}% (Score &gt;= 70% to pass)
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="shrink-0 flex items-center gap-2 self-start md:self-auto">
+            <button
+              type="button"
+              onClick={() => onOpenFinalExam(day)}
+              className={`px-4 py-2.5 rounded-xl font-bold text-xs transition-all shadow-xs flex items-center gap-2 cursor-pointer ${
+                dayFinalPassed
+                  ? 'border border-indigo-300 bg-white text-indigo-700 hover:bg-indigo-50'
+                  : 'bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white hover:opacity-90 active:scale-[0.98]'
+              }`}
+            >
+              <ShieldCheck className="w-4 h-4" />
+              <span>{dayFinalPassed ? 'Retake / Review 25 MCQs' : 'Start 25-MCQ Assessment (30m)'}</span>
             </button>
           </div>
         </div>
@@ -645,7 +697,7 @@ export const DayView: React.FC<DayViewProps> = ({
                 Grand Placement Readiness Certification
               </h2>
               <p className="text-xs text-slate-600 max-w-xl leading-relaxed">
-                Complete the 10-question final comprehensive examination covering Topics T1 through T10 with webcam verification and tab-switch monitoring to earn the official Kapil Placement Certificate.
+                Complete the Day 5 Final Assessment (25 MCQs: Topics T9 &amp; T10 + Aptitude) with browser-integrity proctoring (30-min timer, tab-switch sentry, no camera required) to earn the official Kapil Placement Certificate.
               </p>
             </div>
 
@@ -659,29 +711,14 @@ export const DayView: React.FC<DayViewProps> = ({
                   <Sparkles className="w-4 h-4 text-amber-200" />
                   <span>View Verified Certificate</span>
                 </button>
-              ) : !examEligibility.isEligible ? (
-                <div className="flex flex-col items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={onOpenFinalExam}
-                    className="w-full px-5 py-3 rounded-2xl border-2 border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 font-extrabold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
-                    title="Click to view checklist of remaining tasks"
-                  >
-                    <Lock className="w-4 h-4 text-amber-600 shrink-0" />
-                    <span>Locked: {examEligibility.totalTasksRemaining} Task(s) Pending Across Days 1-5</span>
-                  </button>
-                  <span className="text-[10px] text-slate-500 font-semibold">
-                    Complete all Day 1-5 tasks to unlock exam
-                  </span>
-                </div>
               ) : (
                 <button
                   type="button"
-                  onClick={onOpenFinalExam}
+                  onClick={() => onOpenFinalExam(5)}
                   className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white font-bold text-sm hover:opacity-95 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md animate-pulse"
                 >
                   <ShieldCheck className="w-4 h-4 text-white" />
-                  <span>Launch Proctored Exam (All 5 Days Complete ✓)</span>
+                  <span>Launch Day 5 Assessment (25 MCQs • 30m)</span>
                 </button>
               )}
             </div>

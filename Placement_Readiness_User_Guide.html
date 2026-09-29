@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Placement Readiness 5-Day Workshop - Learner & Admin Executive Guide</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap');
+
+    @page {
+      size: A4 portrait;
+      margin: 14mm 12mm 14mm 12mm;
+      @bottom-right {
+        content: "Page " counter(page);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 8pt;
+        color: #64748b;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #0f172a;
+      background: #ffffff;
+      line-height: 1.55;
+      font-size: 9.5pt;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .page-break {
+      page-break-before: always;
+      break-before: page;
+    }
+
+    .avoid-break {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    /* ================= COVER PAGE ================= */
+    .cover-page {
+      height: 100vh;
+      min-height: 250mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 40px 30px;
+      background: linear-gradient(135deg, #071329 0%, #0c2044 40%, #112a5a 100%);
+      color: #ffffff;
+      border-radius: 16px;
+      page-break-after: always;
+      break-after: page;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cover-page::before {
+      content: "";
+      position: absolute;
+      top: -100px;
+      right: -100px;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.25) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .cover-page::after {
+      content: "";
+      position: absolute;
+      bottom: -120px;
+      left: -120px;
+      width: 450px;
+      height: 450px;
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.15) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .cover-top {
+      position: relative;
+      z-index: 2;
+    }
+
+    .badge-capsule {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 6px 14px;
+      border-radius: 30px;
+      font-size: 8pt;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #60a5fa;
+      backdrop-filter: blur(8px);
+    }
+
+    .cover-center {
+      position: relative;
+      z-index: 2;
+      margin: 40px 0;
+    }
+
+    .cover-title {
+      font-size: 28pt;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #ffffff 30%, #93c5fd 70%, #fde047 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .cover-subtitle {
+      font-size: 13pt;
+      font-weight: 500;
+      color: #cbd5e1;
+      max-width: 600px;
+      line-height: 1.45;
+      margin-bottom: 24px;
+    }
+
+    .pill-features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .pill-item {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 8pt;
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+
+    .pill-item strong {
+      color: #38bdf8;
+    }
+
+    .cover-bottom {
+      position: relative;
+      z-index: 2;
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      padding-top: 20px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .meta-box h4 {
+      font-size: 7pt;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      margin-bottom: 4px;
+      font-weight: 700;
+    }
+
+    .meta-box p {
+      font-size: 9.5pt;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    /* ================= MAIN CONTENT TYPOGRAPHY ================= */
+    h1.sec-title {
+      font-size: 16pt;
+      font-weight: 800;
+      color: #0f172a;
+      border-bottom: 2.5px solid #2563eb;
+      padding-bottom: 6px;
+      margin-top: 24px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      letter-spacing: -0.3px;
+    }
+
+    h1.sec-title .tag {
+      font-size: 8pt;
+      font-weight: 700;
+      background: #eff6ff;
+      color: #1d4ed8;
+      padding: 3px 10px;
+      border-radius: 20px;
+      border: 1px solid #bfdbfe;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    h2.sub-title {
+      font-size: 12pt;
+      font-weight: 700;
+      color: #1e293b;
+      margin-top: 18px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    h2.sub-title::before {
+      content: "";
+      width: 4px;
+      height: 14px;
+      background: #2563eb;
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    p {
+      margin-bottom: 10px;
+      color: #334155;
+      text-align: justify;
+    }
+
+    /* ================= TABLES ================= */
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 18px 0;
+      font-size: 8.5pt;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+
+    table.data-table th {
+      background: #0f172a;
+      color: #ffffff;
+      text-align: left;
+      padding: 8px 10px;
+      font-weight: 700;
+      font-size: 8pt;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    table.data-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #1e293b;
+      vertical-align: top;
+    }
+
+    table.data-table tr:nth-child(even) td {
+      background: #f8fafc;
+    }
+
+    table.data-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* ================= CALLOUT BOXES ================= */
+    .callout {
+      padding: 12px 14px;
+      border-radius: 10px;
+      margin: 12px 0;
+      border-left: 4px solid;
+      font-size: 8.8pt;
+    }
+
+    .callout-blue {
+      background: #eff6ff;
+      border-color: #3b82f6;
+      color: #1e40af;
+    }
+
+    .callout-amber {
+      background: #fffbeb;
+      border-color: #f59e0b;
+      color: #92400e;
+    }
+
+    .callout-emerald {
+      background: #ecfdf5;
+      border-color: #10b981;
+      color: #065f46;
+    }
+
+    .callout-rose {
+      background: #fff1f2;
+      border-color: #f43f5e;
+      color: #9f1239;
+    }
+
+    .callout strong {
+      font-weight: 700;
+    }
+
+    /* ================= 4-STEP JOURNEY FLOW ================= */
+    .step-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 14px 0 18px 0;
+    }
+
+    .step-card {
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 12px;
+      background: #ffffff;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+      position: relative;
+    }
+
+    .step-num {
+      position: absolute;
+      top: -8px;
+      left: 10px;
+      background: #2563eb;
+      color: #ffffff;
+      font-size: 7pt;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 10px;
+      text-transform: uppercase;
+    }
+
+    .step-title {
+      font-size: 9.5pt;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 4px;
+      margin-bottom: 4px;
+    }
+
+    .step-desc {
+      font-size: 8pt;
+      color: #64748b;
+      line-height: 1.4;
+    }
+
+    /* ================= CHECKLIST & BULLETS ================= */
+    ul.pro-list {
+      list-style: none;
+      padding: 0;
+      margin: 8px 0 14px 0;
+    }
+
+    ul.pro-list li {
+      position: relative;
+      padding-left: 20px;
+      margin-bottom: 6px;
+      font-size: 9pt;
+      color: #334155;
+    }
+
+    ul.pro-list li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      top: 0;
+      color: #10b981;
+      font-weight: 800;
+      font-size: 9pt;
+    }
+
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8.2pt;
+      background: #f1f5f9;
+      padding: 2px 5px;
+      border-radius: 4px;
+      color: #0f172a;
+      border: 1px solid #e2e8f0;
+    }
+
+    .header-pill {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 7.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .pill-green { background: #dcfce7; color: #15803d; }
+    .pill-blue { background: #dbeafe; color: #1d4ed8; }
+    .pill-amber { background: #fef3c7; color: #b45309; }
+    .pill-purple { background: #f3e8ff; color: #7e22ce; }
+
+    .footer-bar {
+      margin-top: 30px;
+      padding-top: 10px;
+      border-top: 1px solid #e2e8f0;
+      font-size: 7.5pt;
+      color: #94a3b8;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ================= COVER PAGE ================= -->
+  <div class="cover-page">
+    <div class="cover-top">
+      <div class="badge-capsule">
+        <span>★</span>
+        <span>Executive Operations Manual</span>
+      </div>
+    </div>
+
+    <div class="cover-center">
+      <div class="cover-title">
+        Placement Readiness<br>5-Day Workshop
+      </div>
+      <div class="cover-subtitle">
+        Master Handbook for Problem Solving, High-Frequency DSA Invariants, and Platform Administration
+      </div>
+
+      <div class="pill-features">
+        <div class="pill-item"><strong>100</strong> Total MCQs (10 Pre + 10 Post/Day)</div>
+        <div class="pill-item"><strong>25</strong> Solved Exemplar Programs (5/Day)</div>
+        <div class="pill-item"><strong>10</strong> Level 0 Syntax Foundations</div>
+        <div class="pill-item"><strong>11</strong> Algorithm Visualizer Simulations</div>
+        <div class="pill-item"><strong>25</strong> Placement Aptitude MCQs</div>
+        <div class="pill-item"><strong>10</strong> Spinning Wheel DSA MCQs</div>
+        <div class="pill-item"><strong>Real</strong> Google Authentication Sync</div>
+      </div>
+    </div>
+
+    <div class="cover-bottom">
+      <div class="meta-box">
+        <h4>Chief Instructor</h4>
+        <p>Kapil</p>
+      </div>
+      <div class="meta-box">
+        <h4>Target Audience</h4>
+        <p>Placement Aspirants & Administrators</p>
+      </div>
+      <div class="meta-box">
+        <h4>Platform Version</h4>
+        <p>Production 2.0 • 2026 Edition</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= SECTION 1: EXECUTIVE OVERVIEW ================= -->
+  <div>
+    <h1 class="sec-title">
+      <span>1. Executive Overview & Pedagogical Architecture</span>
+      <span class="tag">Strategy</span>
+    </h1>
+
+    <div class="callout callout-blue">
+      <strong>Core Mission:</strong> Product companies (Amazon, Microsoft, Google, Meta, TCS Digital) evaluate candidates not on code memorization, but on <em>boundary invariance, space-time trade-offs, and conceptual debugging</em>. This platform operationalizes a disciplined, gated curriculum ensuring zero concept leakage.
+    </div>
+
+    <h2 class="sub-title">1.1 Pedagogical Matrix: What, Why, How</h2>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th style="width: 15%;">Dimension</th>
+          <th style="width: 42%;">Learner Perspective</th>
+          <th style="width: 43%;">Administrator Perspective</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>WHAT</strong></td>
+          <td>A rigorous 5-day bootcamp featuring 100 MCQs, 25 multi-language exemplars, 11 algorithm visualizers, Level 0 syntax foundations, built-in 6-language IDE, and daily feedback.</td>
+          <td>A centralized command portal with live Google Firebase sync (zero fake users), recursive day lock controller, CSV reporting suite, and manual credential issuance.</td>
+        </tr>
+        <tr>
+          <td><strong>WHY</strong></td>
+          <td>Prevents tutorial-hell by forcing diagnostic evaluation before coding, multi-language comparison, and passing scores (&ge; 70%) to unlock verified placement badges.</td>
+          <td>Provides absolute batch control, preventing learners from jumping ahead before class, while supplying college placement cells with verified daily attendance & performance audits.</td>
+        </tr>
+        <tr>
+          <td><strong>HOW</strong></td>
+          <td>Sign in with Google &rarr; Clear 10 Pre-MCQs &rarr; Acknowledge 5 Solved Exemplars &rarr; Solve Guided Tasks in IDE/HackerRank &rarr; Score &ge; 70% in 10 Post-MCQs &rarr; Submit 2:30 PM Feedback.</td>
+          <td>Access portal via discrete Lock icon &rarr; Authenticate (<span class="mono">KAPILADMIN</span> / <span class="mono">ADMIN123</span>) &rarr; Inspect real learner progress &rarr; Toggle global or individual day locks &rarr; Export CSVs.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2 class="sub-title">1.2 Curriculum Blueprint Across the 5 Days</h2>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Day</th>
+          <th>Curriculum Topics</th>
+          <th>Pre-Test</th>
+          <th>Exemplars</th>
+          <th>Post-Test</th>
+          <th>Daily Badge</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Day 1</strong></td>
+          <td>T1: Graphs (BFS/DFS Reachability) &bull; T2: Strings & Recursion</td>
+          <td>10 MCQs</td>
+          <td>5 Solved</td>
+          <td>10 MCQs</td>
+          <td><span class="header-pill pill-purple">Graph Master</span></td>
+        </tr>
+        <tr>
+          <td><strong>Day 2</strong></td>
+          <td>T3: Recursion & LCM/GCD &bull; T4: Algorithmic Complexity & Math</td>
+          <td>10 MCQs</td>
+          <td>5 Solved</td>
+          <td>10 MCQs</td>
+          <td><span class="header-pill pill-blue">Math Wizard</span></td>
+        </tr>
+        <tr>
+          <td><strong>Day 3</strong></td>
+          <td>T5: Number Theory (Sieve) &bull; T6: Two-Pointer Techniques</td>
+          <td>10 MCQs</td>
+          <td>5 Solved</td>
+          <td>10 MCQs</td>
+          <td><span class="header-pill pill-green">Pointer Guru</span></td>
+        </tr>
+        <tr>
+          <td><strong>Day 4</strong></td>
+          <td>T7: Advanced Pointers (Sliding Window) &bull; T8: Divide & Conquer</td>
+          <td>10 MCQs</td>
+          <td>5 Solved</td>
+          <td>10 MCQs</td>
+          <td><span class="header-pill pill-amber">D&C Expert</span></td>
+        </tr>
+        <tr>
+          <td><strong>Day 5</strong></td>
+          <td>T9: Advanced D&C &bull; T10: Matrix Manipulations & Synthesis</td>
+          <td>10 MCQs</td>
+          <td>5 Solved</td>
+          <td>10 MCQs</td>
+          <td><span class="header-pill pill-purple">Capstone Champ</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- ================= SECTION 2: LEARNER OPERATING GUIDE ================= -->
+  <div>
+    <h1 class="sec-title">
+      <span>2. The Comprehensive Learner Operating Guide</span>
+      <span class="tag">Student Journey</span>
+    </h1>
+
+    <h2 class="sub-title">2.1 The Mandatory 4-Step Daily Learning Progression</h2>
+    <p>Every workshop day is structured around a strict sequential flow. Learners cannot skip steps or unlock Day <em>N+1</em> without fulfilling all criteria of Day <em>N</em>.</p>
+
+    <div class="step-grid">
+      <div class="step-card">
+        <div class="step-num">Step 1</div>
+        <div class="step-title">Diagnostic Pre-Test</div>
+        <div class="step-desc"><strong>10 MCQs</strong> evaluating fundamental math, recursion trees, and complexity bounds before touching code.</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">Step 2</div>
+        <div class="step-title">5 Solved Exemplars</div>
+        <div class="step-desc">Study <strong>2 Easy, 2 Med, 1 Hard</strong> programs with multi-language code and click <em>Mark as Complete</em>.</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">Step 3</div>
+        <div class="step-title">Guided Syllabus Tasks</div>
+        <div class="step-desc">Solve in-class and post-class coding challenges on <strong>HackerRank</strong> and in the built-in <strong>6-Lang IDE</strong>.</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">Step 4</div>
+        <div class="step-title">Mastery Post-Test</div>
+        <div class="step-desc">Take <strong>10 Post-MCQs</strong> based on today's algorithms. Score <strong>&ge; 70%</strong> to earn your verified Badge.</div>
+      </div>
+    </div>
+
+    <h2 class="sub-title">2.2 Step-by-Step Learner Execution Protocol</h2>
+    <ul class="pro-list">
+      <li><strong>Authentication:</strong> Click <em>Sign In with Google</em> in the top header. Your cloud session ensures all progress, scores, and badges persist across devices.</li>
+      <li><strong>Pre-Assessment:</strong> In the Day view, click <em>Start Pre-Test</em>. Submit your 10 answers. This records your baseline readiness score.</li>
+      <li><strong>5 Solved Practice Questions Masterclass:</strong>
+        <br>&bull; Switch between <strong>C++, Java, Python, C, and HTML/JS</strong> tabs to inspect syntactic nuances.
+        <br>&bull; Read Kapil's Intuition notes detailing edge-case traps (e.g., <span class="mono">INT_MIN</span> boundaries in median partitions).
+        <br>&bull; Click <strong>Open in IDE</strong> to test code with custom inputs.
+        <br>&bull; Click <strong>Mark as Complete</strong> for all 5 problems to satisfy progression criteria.</li>
+      <li><strong>Solving Guided Problems:</strong> Tackle in-class problems directly in the integrated compiler or on HackerRank. Mark each problem as solved upon completion.</li>
+      <li><strong>Earning Badges via Post-Assessment:</strong> Complete the 10 Post-Assessment questions. Scoring 7/10 or higher immediately awards the day's badge.</li>
+      <li><strong>Daily Workshop Feedback (fpln.site):</strong>
+        <br>&bull; Window: <strong>2:30 PM to 3:30 PM IST daily</strong>.
+        <br>&bull; Automated countdown banners notify learners at 2:00 PM (30 min reminder), 2:20 PM (10 min), and 2:25 PM (5 min).
+        <br>&bull; Click <em>Open Day Feedback</em> to record your evaluation.</li>
+      <li><strong>Unlocking Subsequent Days:</strong> When Day 1 is 100% complete, Day 2 unlocks automatically. If Day 1 remains incomplete, Day 2 displays the secure lock gate.</li>
+    </ul>
+
+    <h2 class="sub-title">2.3 Supplemental Accelerator Tools</h2>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Module</th>
+          <th>Location</th>
+          <th>Purpose & Pedagogical Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Level 0 Foundations</strong></td>
+          <td>Sidebar Top / Day Tab</td>
+          <td>10 solved introductory programs in Java, C, C++, Python, and HTML/JS designed for syntax warm-up and cross-language translation practice.</td>
+        </tr>
+        <tr>
+          <td><strong>Algorithm Visualizer</strong></td>
+          <td>Sidebar / Day Tab</td>
+          <td>11 interactive simulations (Searching, Sorting, Graphs, Trees). Provides visual feedback with animated histographs and donut nodes with up to 3 test tries.</td>
+        </tr>
+        <tr>
+          <td><strong>25 Aptitude MCQs</strong></td>
+          <td>Main Home Screen</td>
+          <td>Placement-specific quantitative aptitude, speed math, permutations, probability, and work-rate reasoning.</td>
+        </tr>
+        <tr>
+          <td><strong>Spinning Wheel Lab</strong></td>
+          <td>Header / Welcome Card</td>
+          <td>10 gamified DSA challenge questions featuring realistic negative marking to train risk-calibrated test taking.</td>
+        </tr>
+        <tr>
+          <td><strong>In-Browser IDE</strong></td>
+          <td>Problem Cards</td>
+          <td>Full-featured coding environment supporting 6 languages with live test-case runner, custom input execution, and timing metrics.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- ================= SECTION 3: SUPER ADMIN OPERATING GUIDE ================= -->
+  <div>
+    <h1 class="sec-title">
+      <span>3. Super Admin Operating Guide (Kapil's Control Center)</span>
+      <span class="tag">Instructor Portal</span>
+    </h1>
+
+    <div class="callout callout-amber">
+      <strong>Zero Fake Data Guarantee:</strong> The Admin Dashboard syncs directly with live Google Firebase Authentication. No mock, placeholder, or generated student records exist. Only real students with authenticated sessions are displayed.
+    </div>
+
+    <h2 class="sub-title">3.1 Super Admin Authentication & Portal Access</h2>
+    <p>To preserve learner immersion, admin controls are discreetly embedded behind a secure modal with zero on-screen credential exposure.</p>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Touchpoint</th>
+          <th>Access Location</th>
+          <th>Credentials</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Desktop Web</strong></td>
+          <td>Lock icon in top-right Header and Left Sidebar navigation.</td>
+          <td rowspan="2">
+            <strong>Username:</strong> <span class="mono">KAPILADMIN</span><br>
+            <strong>Password:</strong> <span class="mono">ADMIN123</span><br>
+            <em>(Inputs are masked with an optional visibility toggle)</em>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Mobile / Tablet</strong></td>
+          <td>Floating gold Lock action button fixed in bottom-right corner.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2 class="sub-title">3.2 Core Administrative Operations & Workflows</h2>
+
+    <div class="avoid-break">
+      <h3 style="font-size: 10pt; font-weight: 700; color: #1e293b; margin-top: 10px; margin-bottom: 4px;">A. Day Unlock & Relock Controller (Batch & Individual Management)</h3>
+      <p>Instructor Kapil maintains absolute authority over content access. Days can be toggled globally or customized for individual learners.</p>
+      <ul class="pro-list">
+        <li><strong>Unlock All Days Globally:</strong> Bypasses all locks simultaneously for the entire cohort (ideal for weekend review sessions or open mock tests).</li>
+        <li><strong>Relock All Days to Default:</strong> Restores strict chained gating (Day <em>N</em> requires Day <em>N-1</em> completion).</li>
+        <li><strong>Individual Student Remediation:</strong> Navigate to the student roster &rarr; Click <em>Audit & Access</em> &rarr; Toggle individual day overrides (<span class="mono">FORCE UNLOCK</span> or <span class="mono">FORCE LOCK</span>). Real-time events update the student's screen instantly without requiring page reloads.</li>
+      </ul>
+    </div>
+
+    <div class="avoid-break">
+      <h3 style="font-size: 10pt; font-weight: 700; color: #1e293b; margin-top: 10px; margin-bottom: 4px;">B. Automated Placement Cell CSV Export Engine</h3>
+      <p>College placement cells and training coordinators require clean, timestamped compliance data. The dashboard provides one-click CSV generation:</p>
+      <ul class="pro-list">
+        <li><strong>Daily Reports (Day 1 to 5):</strong> Exports student names, emails, UID, Pre-Test score, Post-Test score, exemplar count, and feedback status for that specific calendar day.</li>
+        <li><strong>5-Day Master Consolidated Report:</strong> Comprehensive multi-column spreadsheet containing total questions solved, all 5 pre/post scores, total badges won, and final certificate eligibility.</li>
+      </ul>
+    </div>
+
+    <div class="avoid-break">
+      <h3 style="font-size: 10pt; font-weight: 700; color: #1e293b; margin-top: 10px; margin-bottom: 4px;">C. Credentials, Badges & Curriculum Extensions</h3>
+      <p>Admin Kapil can issue official credentials and extend the curriculum directly from the portal:</p>
+      <ul class="pro-list">
+        <li><strong>Issue Custom Badges:</strong> Select student, select badge title (e.g. <em>Graph Master, Dynamic Programming Wizard</em>), add personalized commendation notes, and issue directly to their profile.</li>
+        <li><strong>Issue Verified Certificates:</strong> Generate authenticated PDF-ready certificates for students achieving capstone milestones.</li>
+        <li><strong>Deploy Assignments & Quizzes:</strong> Create new coding challenges with starter code and custom test cases, or author new multi-choice quizzes with detailed rationales.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- ================= SECTION 4: SECURITY & TROUBLESHOOTING ================= -->
+  <div>
+    <h1 class="sec-title">
+      <span>4. Security Controls & Operational FAQ</span>
+      <span class="tag">Governance</span>
+    </h1>
+
+    <h2 class="sub-title">4.1 Security Architecture & Gating Rules</h2>
+    <div class="callout callout-rose">
+      <strong>Strict Gating Invariant:</strong> When Day <em>N</em> is locked, the application completely blocks all underlying problem statements, assessment questions, and starter code. No inspection or manipulation can expose locked curriculum data.
+    </div>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th style="width: 28%;">Component</th>
+          <th style="width: 36%;">Learner View</th>
+          <th style="width: 36%;">Super Admin View</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Locked Day Access</strong></td>
+          <td>Renders dedicated Inaccessible Gate with prerequisite checklist and return button.</td>
+          <td>Displays lock notice with direct <em>Unlock via Admin Panel</em> override button.</td>
+        </tr>
+        <tr>
+          <td><strong>Bypass Controls</strong></td>
+          <td>Completely removed from DOM. Learners have zero bypass buttons.</td>
+          <td>Available in Admin Dashboard and persistent Admin Session banner.</td>
+        </tr>
+        <tr>
+          <td><strong>Session Persistence</strong></td>
+          <td>Progress synced to Firebase Cloud via Google OAuth UID.</td>
+          <td>Admin session stored in encrypted local storage with instant logout.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2 class="sub-title">4.2 Frequently Asked Operational Questions</h2>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th style="width: 32%;">Scenario / Question</th>
+          <th style="width: 28%;">Root Cause</th>
+          <th style="width: 40%;">Resolution Procedure</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Day 2 remains locked even though learner solved all Day 1 coding problems.</strong></td>
+          <td>Missing Pre-test, Post-test, or exemplar acknowledgment.</td>
+          <td>Learner must verify: (1) Day 1 Pre-test completed, (2) all 5 Solved Practice Questions marked as Complete, and (3) Post-test scored &ge; 70%. Alternatively, Admin Kapil can force-unlock Day 2 for that student.</td>
+        </tr>
+        <tr>
+          <td><strong>Learner was absent for Day 1 but needs to attend Day 2 live session.</strong></td>
+          <td>Sequential prerequisite dependency block.</td>
+          <td>Admin Kapil opens Admin Dashboard &rarr; Finds student email in Roster &rarr; Clicks <em>Audit & Access</em> &rarr; Toggles Day 2 to <span class="mono">FORCE UNLOCK</span>.</td>
+        </tr>
+        <tr>
+          <td><strong>Learner claims feedback form link is not working.</strong></td>
+          <td>Accessing outside scheduled evaluation window.</td>
+          <td>Feedback form (<span class="mono">fpln.site</span>) operates between <strong>2:30 PM and 3:30 PM IST</strong> daily. Outside this window, submission is locked by the server.</td>
+        </tr>
+        <tr>
+          <td><strong>Where can placement coordinators retrieve attendance data?</strong></td>
+          <td>Reporting requirement.</td>
+          <td>Admin Kapil accesses <em>CSV Reports Center</em> tab &rarr; Clicks <em>Download Master 5-Day CSV</em> &rarr; Shares spreadsheet with placement cell.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="footer-bar">
+      <div>Placement Readiness 5-Day Workshop &bull; Instructor Kapil &bull; Official Documentation</div>
+      <div>Confidential &bull; Proprietary Curriculum &bull; 2026 Edition</div>
+    </div>
+  </div>
+
+</body>
+</html>
