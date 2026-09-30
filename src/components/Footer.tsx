@@ -38,9 +38,9 @@ export const Footer: React.FC<FooterProps> = ({
             </span>
             <div className="text-slate-500 space-y-1 font-medium">
               <div>• 5 Days • 2 Parts / Day (T1 - T10)</div>
-              <div>• Daily Pre & Post Assessments</div>
-              <div>• Daily Unlock: 08:00 AM IST</div>
-              <div>• Daily Relock: 08:00 PM IST</div>
+              <div>• Daily Pre &amp; Post Assessments</div>
+              <div>• 24/7 Unlimited Access (All Days 1-5 Unlocked)</div>
+              <div>• No 8 AM - 8 PM IST Limits</div>
             </div>
           </div>
 

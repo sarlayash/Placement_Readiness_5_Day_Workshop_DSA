@@ -631,8 +631,8 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
         {!isCollapsed && (
           <div className="p-3 border-t border-[#152a55] bg-[#050e1f] text-[11px] text-slate-400">
             <div className="flex items-center justify-between">
-              <span>IST Lock Mode:</span>
-              <span className="text-white font-bold font-mono">08:00 - 20:00</span>
+              <span>Day Access Mode:</span>
+              <span className="text-emerald-400 font-bold font-mono">24/7 All Days Open</span>
             </div>
             <div className="text-[10px] text-slate-500 mt-1">
               Click arrow to collapse or drag right handle

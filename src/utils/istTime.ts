@@ -1,20 +1,20 @@
 /**
- * IST (Indian Standard Time) Lock Window Utility
+ * IST (Indian Standard Time) Clock & Date Utility
  * Rules:
- * - Active Window: 08:00 AM IST to 08:00 PM IST (08:00 - 20:00)
- * - Relocks: 08:00 PM IST till 08:00 AM IST next morning
- * - Next day unlocks strictly at 08:00 AM IST
+ * - All Days 1 to 5 are 100% UNLOCKED 24/7
+ * - No 8:00 AM - 08:00 PM restrictions
+ * - Round-the-clock unlimited learner access
  */
 
 export interface ISTStatus {
   currentISTDate: Date;
   istTimeString: string;
   istDateString: string;
-  isWithinActiveWindow: boolean; // between 08:00 and 20:00 IST
-  timeUntilUnlockSeconds: number; // if before 8am or after 8pm
-  timeUntilRelockSeconds: number; // if between 8am and 8pm
-  activeWindowStart: string; // "08:00 AM IST"
-  activeWindowEnd: string; // "08:00 PM IST"
+  isWithinActiveWindow: boolean; // Always true (24/7 unlimited access)
+  timeUntilUnlockSeconds: number; // 0 (always open)
+  timeUntilRelockSeconds: number; // 0 (never relocks)
+  activeWindowStart: string; // "24/7 Open"
+  activeWindowEnd: string; // "Unlimited Access"
   currentHourIST: number;
   currentMinuteIST: number;
 }
@@ -28,32 +28,13 @@ export function getISTDate(overrideDate?: Date | null): Date {
   return new Date(utc + istOffset);
 }
 
-export function calculateISTStatus(overrideDate?: Date | null, bypassLockWindow = false): ISTStatus {
+export function calculateISTStatus(overrideDate?: Date | null, _bypassLockWindow = false): ISTStatus {
   const ist = getISTDate(overrideDate);
   const hours = ist.getHours();
   const minutes = ist.getMinutes();
-  const seconds = ist.getSeconds();
 
-  // Active window is [08:00, 20:00) IST
-  const isWithinWindow = bypassLockWindow || (hours >= 8 && hours < 20);
-
-  // Time calculations
-  let timeUntilUnlock = 0;
-  let timeUntilRelock = 0;
-
-  if (hours >= 20) {
-    // Relocked for the night. Next unlock is 8 AM tomorrow
-    // hours left today: 24 - hours - 1
-    // hours tomorrow: 8
-    const secondsRemainingToday = (23 - hours) * 3600 + (59 - minutes) * 60 + (60 - seconds);
-    timeUntilUnlock = secondsRemainingToday + 8 * 3600;
-  } else if (hours < 8) {
-    // Before 8 AM today. Unlock is at 8 AM today
-    timeUntilUnlock = (7 - hours) * 3600 + (59 - minutes) * 60 + (60 - seconds);
-  } else {
-    // Within active window. Relock is at 20:00 (8 PM) today
-    timeUntilRelock = (19 - hours) * 3600 + (59 - minutes) * 60 + (60 - seconds);
-  }
+  // All Days 1-5 100% Unlocked 24/7 - No 8AM - 8PM limits
+  const isWithinWindow = true;
 
   // Format strings
   const timeFormatter = new Intl.DateTimeFormat('en-IN', {
@@ -77,10 +58,10 @@ export function calculateISTStatus(overrideDate?: Date | null, bypassLockWindow 
     istTimeString: timeFormatter.format(ist),
     istDateString: dateFormatter.format(ist),
     isWithinActiveWindow: isWithinWindow,
-    timeUntilUnlockSeconds: Math.max(0, timeUntilUnlock),
-    timeUntilRelockSeconds: Math.max(0, timeUntilRelock),
-    activeWindowStart: '08:00 AM IST',
-    activeWindowEnd: '08:00 PM IST',
+    timeUntilUnlockSeconds: 0,
+    timeUntilRelockSeconds: 0,
+    activeWindowStart: '24/7 Open',
+    activeWindowEnd: 'Unlimited Access',
     currentHourIST: hours,
     currentMinuteIST: minutes,
   };
@@ -97,42 +78,14 @@ export function formatSecondsToDHMS(totalSeconds: number): string {
 
 /**
  * Checks if a specific day is accessible to the user
- * - Day 1 is always unlocked during active window (or if bypass is on)
- * - Day N requires Day N-1 to be completed, and must be within active 8am-8pm window
+ * All days 1 to 5 are 100% unlocked 24/7 without 8AM-8PM restrictions.
  */
 export function isDayUnlocked(
-  dayNumber: number,
-  completedBadges: Record<number, boolean>,
-  istStatus: ISTStatus,
-  demoBypass = false
+  _dayNumber: number,
+  _completedBadges?: Record<number, boolean>,
+  _istStatus?: ISTStatus,
+  _demoBypass = false
 ): { unlocked: boolean; reason?: string } {
-  if (demoBypass) {
-    return { unlocked: true };
-  }
-
-  // Check IST Window lock first
-  if (!istStatus.isWithinActiveWindow) {
-    return {
-      unlocked: false,
-      reason: `System locked outside active hours (08:00 AM - 08:00 PM IST). Unlocks at 08:00 AM IST.`,
-    };
-  }
-
-  // Day 1 is open during active window
-  if (dayNumber === 1) {
-    return { unlocked: true };
-  }
-
-  // Day 2..5 requires previous day badge
-  const prevDay = dayNumber - 1;
-  const prevCompleted = !!completedBadges[prevDay];
-
-  if (!prevCompleted) {
-    return {
-      unlocked: false,
-      reason: `Complete Day ${prevDay} syllabus & assessments to unlock Day ${dayNumber}.`,
-    };
-  }
-
+  // All days are 100% unlocked 24/7
   return { unlocked: true };
 }

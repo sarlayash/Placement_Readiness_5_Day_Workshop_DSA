@@ -101,7 +101,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </span>
               </div>
               <div className="text-[11px] text-slate-500 font-medium flex items-center gap-1.5 flex-wrap">
-                <span>Powered by <strong className="text-slate-900 font-bold">Kapil</strong> • 8 AM - 8 PM IST</span>
+                <span>Powered by <strong className="text-slate-900 font-bold">Kapil</strong> • All Days Unlocked (24/7 Access)</span>
                 {onOpenAdmin && (
                   <button
                     type="button"
@@ -131,25 +131,10 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="text-[10px] text-slate-500 border-l border-slate-200 pl-1.5">IST</span>
           </div>
 
-          {/* Active Window or Relock Pill */}
-          <div
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-medium transition-colors ${
-              istStatus.isWithinActiveWindow
-                ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
-                : 'border-amber-200 bg-amber-50 text-amber-900'
-            }`}
-          >
-            {istStatus.isWithinActiveWindow ? (
-              <>
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="font-bold text-emerald-900">Active (8am - 8pm)</span>
-              </>
-            ) : (
-              <>
-                <Lock className="w-3 h-3 text-amber-600" />
-                <span className="font-bold text-amber-900">Night Lock</span>
-              </>
-            )}
+          {/* Active 24/7 Status Pill */}
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-900 text-[11px] font-medium shadow-2xs">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="font-bold text-emerald-900">All Days Unlocked (24/7 Access)</span>
           </div>
 
           {/* Time Lock Override / Sandbox for Testing */}
@@ -403,7 +388,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center gap-1.5">
           <Clock className="w-3 h-3 text-indigo-600" />
           <span className="font-mono font-medium">{istStatus.istTimeString} IST</span>
-          <span>{istStatus.isWithinActiveWindow ? '● Active' : '🔒 Locked'}</span>
+          <span className="text-emerald-700 font-bold">● All Days Unlocked (24/7)</span>
         </div>
         <div className="flex items-center gap-2">
           {onOpenAdmin && (
