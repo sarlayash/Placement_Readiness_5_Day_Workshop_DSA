@@ -1,0 +1,26 @@
+{
+  "name": "Placement Readiness 5-Day Intensive - Powered by Kapil",
+  "short_name": "PlacementKapil",
+  "description": "5-Day Technical Placement Readiness & DSA Workshop powered by Kapil. Offline practice, In-Browser IDE, 25 Aptitude MCQs, and Verified Credentials.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0f172a",
+  "orientation": "portrait-primary",
+  "categories": ["education", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "./pwa-icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./favicon.svg",
+      "sizes": "48x48",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
