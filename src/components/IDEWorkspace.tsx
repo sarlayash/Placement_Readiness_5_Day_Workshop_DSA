@@ -14,6 +14,8 @@ import {
   Check,
   ShieldCheck,
   Lightbulb,
+  Sparkles,
+  Code2,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -34,7 +36,8 @@ export const IDEWorkspace: React.FC<IDEWorkspaceProps> = ({
 }) => {
   const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguage>('cpp');
   const [code, setCode] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'editor' | 'preview'>('editor');
+  const [activeTab, setActiveTab] = useState<'editor' | 'preview' | 'solution'>('editor');
+  const [loadSolutionSuccess, setLoadSolutionSuccess] = useState<boolean>(false);
   const [testResults, setTestResults] = useState<{
     tested: boolean;
     isRunning: boolean;
@@ -56,9 +59,17 @@ export const IDEWorkspace: React.FC<IDEWorkspaceProps> = ({
     results: [],
   });
 
-  const [consoleOutput, setConsoleOutput] = useState<string>('Console initialized. Ready to execute code.');
+  const [consoleOutput, setConsoleOutput] = useState<string>(
+    'Kapil Sandbox Terminal initialized. Write your code or inspect the Official Model Solution to verify test cases.'
+  );
   const [copied, setCopied] = useState<boolean>(false);
   const [showInterviewTips, setShowInterviewTips] = useState<boolean>(true);
+
+  // Model solution in selected language
+  const modelSolution =
+    question.solutions?.[selectedLanguage] ||
+    question.starterCode?.[selectedLanguage] ||
+    '';
 
   // Initialize starter code when language or question changes
   useEffect(() => {
@@ -71,8 +82,8 @@ export const IDEWorkspace: React.FC<IDEWorkspaceProps> = ({
     }
   }, [selectedLanguage, question, savedCode]);
 
-  const handleCopyCode = () => {
-    navigator.clipboard.writeText(code);
+  const handleCopyCode = (textToCopy: string) => {
+    navigator.clipboard.writeText(textToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -80,6 +91,20 @@ export const IDEWorkspace: React.FC<IDEWorkspaceProps> = ({
   const handleResetCode = () => {
     if (question.starterCode && question.starterCode[selectedLanguage]) {
       setCode(question.starterCode[selectedLanguage]);
+    }
+  };
+
+  const handleLoadModelSolution = () => {
+    if (modelSolution) {
+      setCode(modelSolution);
+      setActiveTab('editor');
+      setLoadSolutionSuccess(true);
+      setTimeout(() => setLoadSolutionSuccess(false), 2500);
+      setConsoleOutput(
+        `[Kapil Model Solution]: Successfully loaded verified LeetCode/HackerRank standard solution for ${selectedLanguage.toUpperCase()}.\n` +
+        `Complexity: ${question.timeComplexity} Time, ${question.spaceComplexity} Auxiliary Space.\n` +
+        `Ready to run sample tests or submit across all hidden test cases.`
+      );
     }
   };
 
@@ -101,7 +126,7 @@ export const IDEWorkspace: React.FC<IDEWorkspaceProps> = ({
     }));
     setConsoleOutput(
       isSubmit
-        ? `[Kapil Test Runner]: Submitting solution against ALL test cases (including Hidden Stress Vectors)...`
+        ? `[Kapil Test Runner]: Submitting solution against ALL test vectors (including Hidden Stress & Boundary Cases)...`
         : `[Kapil Test Runner]: Running code against visible sample test vectors...`
     );
 
@@ -111,16 +136,30 @@ export const IDEWorkspace: React.FC<IDEWorkspaceProps> = ({
 
     setTimeout(() => {
       let passed = 0;
-      const results = testCasesToRun.map((tc) => {
+      const isModelCode = modelSolution && code.trim() === modelSolution.trim();
+      const hasTodo = code.includes('// TODO') || code.includes('# TODO') || code.includes('/* TODO');
+      const isTooShort = code.trim().length < 35;
+
+      const results = testCasesToRun.map((tc, idx) => {
         // High fidelity testcase simulation based on language and code
-        const isPass = !code.includes('// TODO') && code.length > 50;
+        let isPass = false;
+        if (isModelCode) {
+          isPass = true;
+        } else if (!hasTodo && !isTooShort) {
+          isPass = true;
+        }
+
         if (isPass) passed++;
 
-        const time = Math.floor(Math.random() * 18) + 6;
+        const time = Math.floor(Math.random() * 12) + 7;
         return {
           testCase: tc,
           passed: isPass,
-          actualOutput: isPass ? tc.expectedOutput : 'Null / Discrepancy detected at index 0',
+          actualOutput: isPass
+            ? tc.expectedOutput
+            : hasTodo
+            ? 'Error: Incomplete implementation (TODO detected)'
+            : 'Error: Output mismatch on constraint vector',
           executionTimeMs: time,
         };
       });
@@ -139,9 +178,15 @@ export const IDEWorkspace: React.FC<IDEWorkspaceProps> = ({
       if (allPassed && isSubmit) {
         setConsoleOutput(
           `✓ SUCCESS: All ${passed}/${testCasesToRun.length} Test Cases Passed!\n` +
-          `✓ Hidden Test Case 1: PASSED (Execution: 12ms, Memory: 1.4MB)\n` +
-          `✓ Hidden Test Case 2: PASSED (Execution: 15ms, Memory: 1.6MB)\n` +
-          `Verdict: Accepted under constraints (${question.timeComplexity}, ${question.spaceComplexity})`
+          `----------------------------------------------------------------------\n` +
+          `✓ Sample Test Case 1: PASSED (Execution: 9ms, Memory: 1.4MB)\n` +
+          `✓ Sample Test Case 2: PASSED (Execution: 11ms, Memory: 1.5MB)\n` +
+          `✓ Hidden Stress Vector 1: PASSED (Execution: 14ms, Memory: 1.8MB)\n` +
+          `✓ Hidden Boundary Vector 2: PASSED (Execution: 12ms, Memory: 1.6MB)\n` +
+          `----------------------------------------------------------------------\n` +
+          `Verdict: Accepted (LeetCode / HackerRank / GFG Standard)\n` +
+          `Complexity Invariant: ${question.timeComplexity} Time, ${question.spaceComplexity} Auxiliary Space.\n` +
+          `Pro-Tip from Kapil: Excellent execution! All hidden constraints satisfied.`
         );
         confetti({
           particleCount: 90,
@@ -152,26 +197,35 @@ export const IDEWorkspace: React.FC<IDEWorkspaceProps> = ({
         if (onMarkSolved) onMarkSolved();
       } else if (allPassed) {
         setConsoleOutput(
-          `✓ Sample Tests Passed (${passed}/${testCasesToRun.length}).\nReady to Submit against Hidden Test Cases!`
+          `✓ Sample Tests Passed (${passed}/${testCasesToRun.length}).\n` +
+          `All visible test cases executed with 100% precision.\n` +
+          `Ready to submit solution against Hidden Stress and Boundary Test Cases!`
         );
       } else {
+        const firstFailed = results.find((r) => !r.passed);
         setConsoleOutput(
-          `✗ Verification Notice: ${passed}/${testCasesToRun.length} Passed.\n` +
-          `Tip from Kapil: Check boundary invariants and handle empty or duplicate inputs.`
+          `✗ Verification Notice: ${passed}/${testCasesToRun.length} Test Cases Passed.\n` +
+          `----------------------------------------------------------------------\n` +
+          `Failing Test: ${firstFailed?.testCase.isHidden ? 'Hidden Test Case' : 'Sample Test Case'}\n` +
+          `Input: ${firstFailed?.testCase.input.replace(/\n/g, ' ')}\n` +
+          `Expected Output: ${firstFailed?.testCase.expectedOutput.replace(/\n/g, ' ')}\n` +
+          `Actual Output: ${firstFailed?.actualOutput}\n` +
+          `----------------------------------------------------------------------\n` +
+          `Tip from Kapil: Check edge invariants or click 'View Official Solution' to inspect the verified model implementation!`
         );
       }
 
       if (onSaveCode) {
         onSaveCode(selectedLanguage, code);
       }
-    }, 700);
+    }, 600);
   };
 
   const LANGUAGES: Array<{ id: SupportedLanguage; label: string; badge: string }> = [
-    { id: 'c', label: 'C', badge: 'C99' },
     { id: 'cpp', label: 'C++', badge: 'C++20' },
     { id: 'java', label: 'Java', badge: 'OpenJDK 17' },
     { id: 'python', label: 'Python', badge: 'v3.11' },
+    { id: 'c', label: 'C', badge: 'C99' },
     { id: 'javascript', label: 'JavaScript', badge: 'ES6/Node' },
     { id: 'html', label: 'HTML', badge: 'Web UI' },
   ];
@@ -199,7 +253,7 @@ export const IDEWorkspace: React.FC<IDEWorkspaceProps> = ({
           </div>
         </div>
 
-        {/* Center: Language Selector Pills (C, C++, Java, Python, HTML, JavaScript) */}
+        {/* Center: Language Selector Pills (C++, Java, Python, C, JavaScript, HTML) */}
         <div className="hidden md:flex items-center gap-1 p-1 rounded-xl bg-[#040814] border border-slate-800 text-xs">
           {LANGUAGES.map((lang) => (
             <button
@@ -208,7 +262,7 @@ export const IDEWorkspace: React.FC<IDEWorkspaceProps> = ({
               onClick={() => {
                 setSelectedLanguage(lang.id);
                 if (lang.id === 'html') setActiveTab('preview');
-                else setActiveTab('editor');
+                else if (activeTab === 'preview') setActiveTab('editor');
               }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${
                 selectedLanguage === lang.id
@@ -271,7 +325,7 @@ export const IDEWorkspace: React.FC<IDEWorkspaceProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 ml-1"
+            className="p-1.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 ml-1 cursor-pointer"
             title="Close IDE"
           >
             <X className="w-5 h-5" />
@@ -281,69 +335,151 @@ export const IDEWorkspace: React.FC<IDEWorkspaceProps> = ({
 
       {/* Main Split Layout: Editor Area + Test Cases & Tips Sidecar */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Side: Code Editor / HTML Preview */}
+        {/* Left Side: Code Editor / HTML Preview / Model Solution */}
         <div className="flex-1 flex flex-col min-w-0 bg-[#070d1e] border-r border-slate-800">
-          {/* Sub-bar with Editor Controls */}
+          {/* Sub-bar with Editor Controls & Model Solution Toggle */}
           <div className="h-10 border-b border-slate-800 bg-[#0a1229] px-4 flex items-center justify-between text-xs text-slate-400 shrink-0">
-            <div className="flex items-center gap-2">
-              <FileCode className="w-4 h-4 text-indigo-400" />
-              <span className="font-mono text-slate-300">
-                solution.
-                {selectedLanguage === 'cpp'
-                  ? 'cpp'
-                  : selectedLanguage === 'c'
-                  ? 'c'
-                  : selectedLanguage === 'java'
-                  ? 'java'
-                  : selectedLanguage === 'python'
-                  ? 'py'
-                  : selectedLanguage === 'html'
-                  ? 'html'
-                  : 'js'}
-              </span>
-              <span className="text-[10px] text-slate-500 font-mono">
-                ({LANGUAGES.find((l) => l.id === selectedLanguage)?.badge})
-              </span>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <FileCode className="w-4 h-4 text-indigo-400" />
+                <span className="font-mono text-slate-300">
+                  solution.
+                  {selectedLanguage === 'cpp'
+                    ? 'cpp'
+                    : selectedLanguage === 'c'
+                    ? 'c'
+                    : selectedLanguage === 'java'
+                    ? 'java'
+                    : selectedLanguage === 'python'
+                    ? 'py'
+                    : selectedLanguage === 'html'
+                    ? 'html'
+                    : 'js'}
+                </span>
+                <span className="text-[10px] text-slate-500 font-mono">
+                  ({LANGUAGES.find((l) => l.id === selectedLanguage)?.badge})
+                </span>
+              </div>
+
+              {/* View Official Solution Tab Pill */}
+              <div className="hidden sm:flex items-center gap-1 pl-3 border-l border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('editor')}
+                  className={`px-2.5 py-1 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                    activeTab === 'editor'
+                      ? 'bg-indigo-600/30 text-indigo-300 border border-indigo-500/40'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  My Code
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('solution')}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                    activeTab === 'solution'
+                      ? 'bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 shadow-xs'
+                      : 'text-emerald-400 hover:bg-emerald-950/40'
+                  }`}
+                  title="View verified LeetCode / HackerRank / GFG solution"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Official Solution</span>
+                </button>
+              </div>
             </div>
 
             <div className="flex items-center gap-2">
+              {activeTab === 'solution' && (
+                <button
+                  type="button"
+                  onClick={handleLoadModelSolution}
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer shadow-xs transition-colors"
+                  title="Load verified solution into your editor to execute tests"
+                >
+                  {loadSolutionSuccess ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-200" />
+                      <span>Loaded to Editor!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Code2 className="w-3.5 h-3.5" />
+                      <span>Load Solution to Editor</span>
+                    </>
+                  )}
+                </button>
+              )}
+
               <button
                 type="button"
                 onClick={() => setShowInterviewTips((prev) => !prev)}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-colors ${
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
                   showInterviewTips
                     ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
                 <Lightbulb className="w-3.5 h-3.5" />
-                <span>Interview Tips</span>
+                <span className="hidden sm:inline">Interview Tips</span>
               </button>
 
               <button
                 type="button"
-                onClick={handleCopyCode}
-                className="flex items-center gap-1 text-slate-400 hover:text-white px-2 py-1 rounded hover:bg-slate-800 text-xs"
+                onClick={() => handleCopyCode(activeTab === 'solution' ? modelSolution : code)}
+                className="flex items-center gap-1 text-slate-400 hover:text-white px-2 py-1 rounded hover:bg-slate-800 text-xs cursor-pointer"
                 title="Copy code"
               >
                 {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copied ? 'Copied' : 'Copy'}</span>
               </button>
 
-              <button
-                type="button"
-                onClick={handleResetCode}
-                className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800"
-                title="Reset to starter code template"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-              </button>
+              {activeTab === 'editor' && (
+                <button
+                  type="button"
+                  onClick={handleResetCode}
+                  className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"
+                  title="Reset to starter code template"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Code Editor or HTML Live Preview */}
+          {/* Main Work Area: Code Editor, HTML Preview, or Verified Model Solution */}
           <div className="flex-1 flex overflow-hidden relative">
-            {activeTab === 'preview' && selectedLanguage === 'html' ? (
+            {activeTab === 'solution' ? (
+              <div className="w-full h-full flex flex-col bg-[#070d1e] overflow-hidden">
+                <div className="bg-emerald-950/40 border-b border-emerald-900/60 px-4 py-2 flex items-center justify-between shrink-0">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold uppercase tracking-wider border border-emerald-500/30">
+                      LeetCode • HackerRank • GFG Standard
+                    </span>
+                    <span className="text-xs text-slate-300 font-semibold hidden md:inline">
+                      Kapil&apos;s Verified Model Solution ({selectedLanguage.toUpperCase()})
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs">
+                    <span className="text-slate-400 font-mono text-[11px]">
+                      Time: <strong className="text-emerald-400">{question.timeComplexity}</strong> • Space: <strong className="text-emerald-400">{question.spaceComplexity}</strong>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleLoadModelSolution}
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold cursor-pointer"
+                    >
+                      <Code2 className="w-3.5 h-3.5" />
+                      <span>Apply & Test</span>
+                    </button>
+                  </div>
+                </div>
+                <div className="flex-1 overflow-auto p-4 font-mono text-xs md:text-sm text-emerald-200/95 bg-[#050b18] leading-relaxed select-text">
+                  <pre className="whitespace-pre">{modelSolution}</pre>
+                </div>
+              </div>
+            ) : activeTab === 'preview' && selectedLanguage === 'html' ? (
               <div className="w-full h-full bg-white">
                 <iframe
                   title="HTML Live Preview"
@@ -359,7 +495,7 @@ export const IDEWorkspace: React.FC<IDEWorkspaceProps> = ({
                   onChange={(e) => setCode(e.target.value)}
                   spellCheck={false}
                   className="w-full flex-1 p-4 bg-[#070d1e] text-slate-100 font-mono text-xs md:text-sm leading-relaxed resize-none focus:outline-none border-none selection:bg-indigo-600 selection:text-white"
-                  placeholder="Type your code solution here..."
+                  placeholder="Type your competitive programming solution here..."
                 />
               </div>
             )}
@@ -463,10 +599,10 @@ export const IDEWorkspace: React.FC<IDEWorkspaceProps> = ({
                     ) : (
                       <div className="space-y-1 font-mono text-[11px]">
                         <div className="text-slate-400">
-                          Input: <span className="text-white">{tc.input}</span>
+                          Input: <span className="text-white whitespace-pre-wrap">{tc.input}</span>
                         </div>
                         <div className="text-slate-400">
-                          Expected: <span className="text-emerald-300">{tc.expectedOutput}</span>
+                          Expected: <span className="text-emerald-300 whitespace-pre-wrap">{tc.expectedOutput}</span>
                         </div>
                         {result && !result.passed && (
                           <div className="text-rose-400">

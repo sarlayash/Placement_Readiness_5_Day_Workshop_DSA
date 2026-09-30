@@ -1,5 +1,7 @@
 import { Topic, DayAssessment, Badge, AssessmentQuestion } from '../types';
 import { generateStarterCode, generateTestCases } from '../utils/codeTemplates';
+import { CURRICULUM_SOLUTIONS } from './curriculumSolutions';
+import { CURRICULUM_TEST_CASES } from './curriculumTestCases';
 
 export const HACKERRANK_COURSE_URL = 'https://www.hackerrank.com/ti27183-jiet';
 
@@ -1033,8 +1035,9 @@ export const TOPICS: Topic[] = RAW_TOPICS.map((topic) => ({
   part: (topic.part === 1 ? 1 : 2) as 1 | 2,
   questions: topic.questions.map((q: any) => ({
     ...q,
-    testCases: generateTestCases(q.sampleInput, q.sampleOutput, q.name),
+    testCases: CURRICULUM_TEST_CASES[q.id] || generateTestCases(q.sampleInput, q.sampleOutput, q.name),
     starterCode: generateStarterCode(q.name, q.sampleInput, q.sampleOutput),
+    solutions: CURRICULUM_SOLUTIONS[q.id] || undefined,
     interviewTips: [
       `Kapil's Pro-Tip: Clarify corner cases (empty, single element, negative inputs).`,
       `Target: ${q.timeComplexity} time and ${q.spaceComplexity} auxiliary space.`,

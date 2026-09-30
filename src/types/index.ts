@@ -29,6 +29,7 @@ export interface Question {
   hackerRankUrl: string;
   testCases: TestCase[];
   starterCode: Record<SupportedLanguage, string>;
+  solutions?: Record<SupportedLanguage, string>;
   completed?: boolean;
 }
 
